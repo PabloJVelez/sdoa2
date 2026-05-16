@@ -1,0 +1,67 @@
+import { Button } from '@app/components/common/buttons/Button';
+import { Image } from '@app/components/common/images/Image';
+import { useRemoveCartItem } from '@app/hooks/useRemoveCartItem';
+import { formatLineItemPrice } from '@libs/util/prices';
+import { StoreCartLineItem } from '@medusajs/types';
+import clsx from 'clsx';
+import type { FC } from 'react';
+
+export interface CartDrawerItemProps {
+  item: StoreCartLineItem;
+  currencyCode: string;
+  isRemoving?: boolean;
+}
+
+export const CartDrawerItem: FC<CartDrawerItemProps> = ({ item, currencyCode, isRemoving }) => {
+  const removeCartItem = useRemoveCartItem();
+  const handleRemoveFromCart = () => removeCartItem.submit(item);
+  const metadata = (item.metadata ?? {}) as Record<string, unknown>
+  const isAdditionalCharge = metadata.kind === "chef_event_additional_charge"
+  const displayTitle =
+    isAdditionalCharge && typeof metadata.charge_name === "string"
+      ? metadata.charge_name
+      : item.product_title
+  const displayVariantTitle =
+    isAdditionalCharge ? "One-time event charge" : item.variant_title
+
+  return (
+    <li
+      key={item.id}
+      className={clsx('flex h-36 py-6 opacity-100 transition-all', {
+        '!h-0 !p-0 !opacity-0': isRemoving,
+      })}
+    >
+      <div className="h-24 w-24 flex-shrink-0 overflow-hidden rounded-md border border-gray-200">
+        <Image
+          src={item.variant?.product?.thumbnail || ''}
+          alt={item.product_title || 'product thumbnail'}
+          className="h-full w-full object-cover object-center"
+        />
+      </div>
+
+      <div className="ml-4 flex flex-1 flex-col">
+        <div>
+          <div className="flex items-start justify-between">
+            <div>
+              <h3 className="text-base font-bold text-gray-900">{displayTitle}</h3>
+              <p className="mt-0.5 text-sm text-gray-500">{displayVariantTitle}</p>
+            </div>
+            {!isAdditionalCharge ? (
+              <Button variant="link" onClick={handleRemoveFromCart} disabled={isRemoving} className="text-sm">
+                {isRemoving ? 'Removing' : 'Remove'}
+              </Button>
+            ) : null}
+          </div>
+        </div>
+        <div className="flex-1" />
+        <div className="flex items-center justify-between">
+          <p className="text-sm  text-gray-500">Qty {item.quantity}</p>
+
+          <div className="flex">
+            <p className="ml-4">{formatLineItemPrice(item, currencyCode)}</p>
+          </div>
+        </div>
+      </div>
+    </li>
+  );
+};

@@ -1,0 +1,109 @@
+/**
+ * Chef Configuration
+ *
+ * This file contains all chef-specific information that can be easily customized
+ * for different chefs. Update these values to personalize the storefront.
+ */
+
+export interface ChefConfig {
+  // Basic Information
+  name: string;
+  displayName: string; // e.g., "Chef [Name]"
+  tagline: string;
+
+  // Biography
+  bio: {
+    short: string; // 1-2 sentences
+    long: string[]; // Array of paragraphs
+    subtitle: string; // e.g., "Culinary Artistry"
+  };
+
+  // Experience & Credentials
+  credentials: {
+    yearsExperience: string;
+    specialization: string;
+    highlights: string[]; // Badge items like "Michelin Trained", "Local Sourcing"
+  };
+
+  // Hero Section
+  hero: {
+    tagline: string;
+    description: string;
+    imageUrl: string;
+    imageAlt: string;
+  };
+
+  // Meta & SEO
+  seo: {
+    title: string;
+    description: string;
+    keywords: string[];
+  };
+}
+
+/**
+ * Default Configuration
+ *
+ * This provides a generic template that can be used as-is for demos
+ * or customized for specific chefs.
+ */
+export const chefConfig: ChefConfig = {
+  // Basic Information
+  name: 'Your Chef',
+  displayName: 'Your Culinary Storefront',
+  tagline: 'A DEMO FOR PRIVATE CHEFS',
+
+  // Biography
+  bio: {
+    short:
+      'A private chef specializing in premium at-home culinary experiences: cooking classes, plated dinners, buffet-style events, and more.',
+    long: [
+      'With years of culinary experience, our chef has honed their craft under renowned culinary experts. As a dedicated private chef, they create exquisite dining experiences for discerning clients who value exceptional cuisine.',
+      'Their dedication to the culinary arts is evident in their mastery of various cooking techniques and deep understanding of culinary concepts. They bring a passion for food that transcends the ordinary, always seeking to educate and inspire those around them.',
+      'Ready to showcase culinary expertise: not just cooking, but creating memorable experiences. Plan your next culinary journey and indulge in flavors that will delight your palate.',
+    ],
+    subtitle: 'Culinary Excellence',
+  },
+
+  // Experience & Credentials
+  credentials: {
+    yearsExperience: '15+ years',
+    specialization: 'Contemporary cuisine with seasonal ingredients',
+    highlights: ['Professional Training', 'Seasonal Sourcing', 'Custom Menus'],
+  },
+
+  // Hero Section (demo copy: speaks to the chef evaluating the platform)
+  hero: {
+    tagline: 'A DEMO FOR PRIVATE CHEFS',
+    description:
+      'This is what your clients see. Showcase your menus, take event requests, and present whatever experiences you offer, from cooking classes and plated dinners to buffet events and beyond, all in one place.',
+    imageUrl:
+      'https://images.unsplash.com/photo-1556910103-1c02745aae4d?auto=format&fit=crop&w=2070&q=80',
+    imageAlt: 'Professional culinary preparation in a kitchen',
+  },
+
+  // Meta & SEO
+  seo: {
+    title: 'Private Chef Storefront Demo',
+    description:
+      'Demo storefront for private chefs. See how your menus, events, and whatever experience types you offer can be presented to clients.',
+    keywords: [
+      'private chef',
+      'cooking classes',
+      'plated dinner',
+      'culinary experiences',
+      'chef services',
+      'private dining',
+      'buffet style events',
+      'at-home dining',
+    ],
+  },
+};
+
+/**
+ * Helper function to get chef configuration
+ * This allows for future extensibility (e.g., environment-based configs)
+ */
+export function getChefConfig(): ChefConfig {
+  return chefConfig;
+}

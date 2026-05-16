@@ -1,0 +1,19 @@
+import type { CustomPaymentSession } from '@libs/types';
+import type { FC, PropsWithChildren } from 'react';
+import { StripeElementsProvider } from './StripeElementsProvider';
+import { StripePaymentForm } from './StripePaymentForm';
+
+export interface StripePaymentProps extends PropsWithChildren {
+  isActiveStep: boolean;
+  paymentMethods: CustomPaymentSession[];
+  isDigitalOnly?: boolean;
+}
+
+export const StripePayment: FC<StripePaymentProps> = (props) => {
+  const { isActiveStep, ...rest } = props;
+  return (
+    <StripeElementsProvider>
+      <StripePaymentForm {...rest} isActiveStep={isActiveStep} />
+    </StripeElementsProvider>
+  );
+};
