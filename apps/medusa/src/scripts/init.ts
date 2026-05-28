@@ -31,6 +31,7 @@ import { EXPERIENCE_TYPE_MODULE } from '../modules/experience-type';
 import type MenuModuleService from '../modules/menu/service';
 import type ExperienceTypeModuleService from '../modules/experience-type/service';
 import ensureSystemChargeProduct from './ensure-system-charge-product';
+import ensureSushiDeliveryFeeProduct from './ensure-sushi-delivery-fee-product';
 
 export default async function init({ container }: ExecArgs) {
   const logger = container.resolve(ContainerRegistrationKeys.LOGGER);
@@ -181,6 +182,26 @@ export default async function init({ container }: ExecArgs) {
           { attribute: 'is_return', value: 'false', operator: 'eq' },
         ],
       },
+      {
+        name: 'Sushi Pickup',
+        price_type: 'flat',
+        provider_id: 'manual_manual',
+        service_zone_id: serviceZoneId,
+        shipping_profile_id: shippingProfile.id,
+        type: {
+          label: 'Sushi Pickup',
+          description: 'Pickup at the chef location.',
+          code: 'sushi_pickup',
+        },
+        prices: [
+          { currency_code: 'usd', amount: 0 },
+          { region_id: usRegion.id, amount: 0 },
+        ],
+        rules: [
+          { attribute: 'enabled_in_store', value: 'true', operator: 'eq' },
+          { attribute: 'is_return', value: 'false', operator: 'eq' },
+        ],
+      },
     ],
   });
 
@@ -215,7 +236,10 @@ export default async function init({ container }: ExecArgs) {
     container,
   ).run({
     input: {
-      collections: [{ title: 'Chef Experiences', handle: 'chef-experiences' }],
+      collections: [
+        { title: 'Chef Experiences', handle: 'chef-experiences' },
+        { title: 'Sushi', handle: 'sushi' },
+      ],
     },
   });
 
@@ -310,6 +334,7 @@ export default async function init({ container }: ExecArgs) {
   });
 
   await ensureSystemChargeProduct({ container });
+  await ensureSushiDeliveryFeeProduct({ container });
 
   logger.info('Init complete.');
   logger.info(`PUBLISHABLE API KEY: ${publishableApiKey.token}`);

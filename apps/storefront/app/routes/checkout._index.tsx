@@ -4,7 +4,13 @@ import { Empty } from '@app/components/common/Empty/Empty';
 import { Button } from '@app/components/common/buttons/Button';
 import { CheckoutProvider } from '@app/providers/checkout-provider';
 import ShoppingCartIcon from '@heroicons/react/24/outline/ShoppingCartIcon';
-import { filterShippingOptionsForCart, hasOnlyDigitalItems, isDigitalShippingOption } from '@libs/util/cart/cart-helpers';
+import {
+  filterShippingOptionsForCart,
+  hasOnlyDigitalItems,
+  isDigitalShippingOption,
+  isSushiPickupShippingOption,
+} from '@libs/util/cart/cart-helpers';
+import { cartContainsSushiItems } from '@libs/util/sushi';
 import { sdk } from '@libs/util/server/client.server';
 import { getCartId, removeCartId } from '@libs/util/server/cookies.server';
 import { initiatePaymentSession, retrieveCart, setShippingMethod } from '@libs/util/server/data/cart.server';
@@ -43,6 +49,17 @@ const findCheapestShippingOption = (shippingOptions: StoreCartShippingOption[]) 
 const ensureSelectedCartShippingMethod = async (request: Request, cart: StoreCart) => {
   const shippingOptions = await fetchShippingOptions(cart.id);
   if (shippingOptions.length === 0) return;
+
+  if (cartContainsSushiItems(cart)) {
+    const pickupOption = shippingOptions.find(isSushiPickupShippingOption);
+    if (pickupOption) {
+      const currentMethod = cart.shipping_methods?.[0];
+      if (!currentMethod || currentMethod.shipping_option_id !== pickupOption.id) {
+        await setShippingMethod(request, { cartId: cart.id, shippingOptionId: pickupOption.id });
+      }
+    }
+    return;
+  }
 
   // For digital-only carts, always ensure the digital delivery option is selected
   if (hasOnlyDigitalItems(cart)) {

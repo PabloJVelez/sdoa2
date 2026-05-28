@@ -1,3 +1,4 @@
+import { cartContainsSushiItems, isSushiDeliveryFeeLine } from '@libs/util/sushi';
 import { StoreCart, StoreCartShippingOption } from '@medusajs/types';
 
 /**
@@ -15,18 +16,39 @@ export function isDigitalShippingOption(option: StoreCartShippingOption): boolea
  */
 export function hasOnlyDigitalItems(cart: StoreCart | null): boolean {
   if (!cart || !cart.items?.length) return false;
+  if (cartContainsSushiItems(cart)) return false;
 
   return cart.items.every((item) => {
     const lineItem = item as unknown as Record<string, unknown>;
+    if (isSushiDeliveryFeeLine(lineItem as never)) return false;
     if (lineItem.requires_shipping === false) return true;
     const metadata =
       typeof lineItem.metadata === "object" && lineItem.metadata !== null
         ? (lineItem.metadata as Record<string, unknown>)
         : null;
+    if (metadata?.order_flow === 'sushi') return false;
     if (metadata?.kind === "chef_event_additional_charge") return true;
     const sku = lineItem.variant_sku;
     return typeof sku === 'string' && sku.startsWith('EVENT-');
   });
+}
+
+export function isSushiPickupShippingOption(option: StoreCartShippingOption): boolean {
+  return option.name.toLowerCase().includes('sushi pickup');
+}
+
+export function filterShippingOptionsForSushiCart(
+  cart: StoreCart | null,
+  shippingOptions: StoreCartShippingOption[],
+): StoreCartShippingOption[] {
+  if (!cartContainsSushiItems(cart)) return shippingOptions;
+  const sushiOptions = shippingOptions.filter(
+    (option) =>
+      isSushiPickupShippingOption(option) ||
+      option.amount === 0 ||
+      option.name.toLowerCase().includes('standard'),
+  );
+  return sushiOptions.length > 0 ? sushiOptions : shippingOptions;
 }
 
 /**
@@ -66,6 +88,10 @@ export function filterShippingOptionsForCart(
   cart: StoreCart | null,
   shippingOptions: StoreCartShippingOption[],
 ): StoreCartShippingOption[] {
+  if (cartContainsSushiItems(cart)) {
+    return filterShippingOptionsForSushiCart(cart, shippingOptions);
+  }
+
   if (!hasOnlyDigitalItems(cart)) return shippingOptions;
 
   const digitalOptions = shippingOptions.filter(isDigitalShippingOption);

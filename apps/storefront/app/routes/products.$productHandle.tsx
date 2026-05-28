@@ -2,7 +2,7 @@ import { ProductReviewSection } from '@app/components/reviews/ProductReviewSecti
 import ProductList from '@app/components/sections/ProductList';
 import { ProductTemplate } from '@app/templates/ProductTemplate';
 import { EventProductDetails } from '@app/components/product/EventProductDetails';
-import { getMergedProductMeta, isEventProduct } from '@libs/util/products';
+import { getMergedProductMeta, isEventProduct, isSushiProduct } from '@libs/util/products';
 import { fetchProductReviewStats, fetchProductReviews } from '@libs/util/server/data/product-reviews.server';
 import { fetchProducts } from '@libs/util/server/products.server';
 import { fetchChefEventForProduct, fetchMenuForProduct } from '@libs/util/server/data/event-products.server';
@@ -56,7 +56,7 @@ export const loader = async (args: LoaderFunctionArgs) => {
   if (isEvent) {
     [chefEvent, menu] = await Promise.all([
       fetchChefEventForProduct(product),
-      fetchMenuForProduct(product),
+      fetchMenuForProduct(),
     ]);
   }
 
@@ -83,6 +83,14 @@ export default function ProductDetailRoute() {
     })),
     isEvent: isEventProduct(product)
   });
+
+  if (isSushiProduct(product)) {
+    return (
+      <>
+        <ProductTemplate product={product} reviewsCount={0} reviewStats={undefined} sushiMode />
+      </>
+    );
+  }
 
   // Check if this is an event product
   if (isEventProduct(product)) {

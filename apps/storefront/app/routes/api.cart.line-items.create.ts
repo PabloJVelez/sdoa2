@@ -1,7 +1,8 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { getVariantBySelectedOptions } from '@libs/util/products';
-import { setCartId } from '@libs/util/server/cookies.server';
-import { addToCart } from '@libs/util/server/data/cart.server';
+import { cartContainsEventItems, isSushiProduct } from '@libs/util/sushi';
+import { removeCartId, setCartId } from '@libs/util/server/cookies.server';
+import { addToCart, retrieveCart } from '@libs/util/server/data/cart.server';
 import { getProductsById } from '@libs/util/server/data/products.server';
 import { getSelectedRegion } from '@libs/util/server/data/regions.server';
 import { FieldErrors } from 'react-hook-form';
@@ -111,14 +112,52 @@ export async function action({ request }: ActionFunctionArgs) {
     );
   }
 
+  const replaceCart = formData.get('replaceCart') === 'true';
   const responseHeaders = new Headers();
+  const existingCart = await retrieveCart(request);
+  const addingSushi = isSushiProduct(product);
 
-  const { cart } = await addToCart(request, {
-    variantId: finalVariant.id!,
-    quantity,
-  });
+  if (
+    addingSushi &&
+    existingCart &&
+    cartContainsEventItems(existingCart) &&
+    !replaceCart
+  ) {
+    return data(
+      {
+        cartConflict: 'event_to_sushi',
+        message:
+          'Your cart has chef event tickets. Adding sushi will clear the current cart.',
+      },
+      { status: 409 },
+    );
+  }
 
-  await setCartId(responseHeaders, cart.id);
+  if (replaceCart && existingCart) {
+    await removeCartId(responseHeaders);
+  }
 
-  return data({ cart }, { headers: responseHeaders });
+  try {
+    const { cart } = await addToCart(request, {
+      variantId: finalVariant.id!,
+      quantity,
+    });
+
+    await setCartId(responseHeaders, cart.id);
+    return data({ cart }, { headers: responseHeaders });
+  } catch (error: unknown) {
+    const message =
+      error instanceof Error ? error.message : String(error);
+    if (message.includes('SUSHI_EVENT_CART_CONFLICT')) {
+      return data(
+        {
+          cartConflict: 'event_to_sushi',
+          message:
+            'Your cart has chef event tickets. Adding sushi will clear the current cart.',
+        },
+        { status: 409 },
+      );
+    }
+    throw error;
+  }
 }

@@ -38,7 +38,7 @@ import { RemixFormProvider, useRemixForm } from 'remix-hook-form';
  * @param product - The product to generate breadcrumbs for
  * @returns An array of breadcrumb objects
  */
-const getBreadcrumbs = (product: StoreProduct) => {
+const getBreadcrumbs = (product: StoreProduct, sushiMode?: boolean) => {
   const breadcrumbs: Breadcrumb[] = [
     {
       label: (
@@ -49,10 +49,12 @@ const getBreadcrumbs = (product: StoreProduct) => {
       ),
       url: `/`,
     },
-    {
-      label: 'All Products',
-      url: '/products',
-    },
+    sushiMode
+      ? { label: 'Order Sushi', url: '/sushi' }
+      : {
+          label: 'All Products',
+          url: '/products',
+        },
   ];
 
   if (product.collection) {
@@ -69,6 +71,7 @@ export interface ProductTemplateProps {
   product: StoreProduct;
   reviewsCount: number;
   reviewStats?: StoreProductReviewStats;
+  sushiMode?: boolean;
 }
 
 /**
@@ -80,7 +83,12 @@ const variantIsSoldOut: (variant: StoreProductVariant | undefined) => boolean = 
   return !!(variant?.manage_inventory && variant?.inventory_quantity! < 1);
 };
 
-export const ProductTemplate = ({ product, reviewsCount, reviewStats }: ProductTemplateProps) => {
+export const ProductTemplate = ({
+  product,
+  reviewsCount,
+  reviewStats,
+  sushiMode = false,
+}: ProductTemplateProps) => {
   const formRef = useRef<HTMLFormElement>(null);
   const addToCartFetcher = useFetcher<any>({ key: FetcherKeys.cart.createLineItem });
   const { toggleCartDrawer } = useCart();
@@ -135,8 +143,20 @@ export const ProductTemplate = ({ product, reviewsCount, reviewStats }: ProductT
     },
   });
 
-  const breadcrumbs = getBreadcrumbs(product);
+  const breadcrumbs = getBreadcrumbs(product, sushiMode);
+  const [cartConflict, setCartConflict] = useState<string | null>(null);
   const currencyCode = region.currency_code;
+
+  useEffect(() => {
+    if (addToCartFetcher.data?.cartConflict === 'event_to_sushi') {
+      setCartConflict(addToCartFetcher.data.message ?? 'Clear event cart to order sushi?');
+      return;
+    }
+    if (addToCartFetcher.data?.cart) {
+      setCartConflict(null);
+      toggleCartDrawer(true);
+    }
+  }, [addToCartFetcher.data, toggleCartDrawer]);
   const [controlledOptions, setControlledOptions] = useState<Record<string, string>>(defaultValues.options);
   const selectedOptions = useMemo(
     () => product.options?.map(({ id }) => controlledOptions[id]),
@@ -400,13 +420,37 @@ export const ProductTemplate = ({ product, reviewsCount, reviewStats }: ProductT
                             </section>
                           )}
 
+                          {cartConflict && (
+                            <div className="rounded-md border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950">
+                              <p>{cartConflict}</p>
+                              <Button
+                                type="button"
+                                className="mt-3"
+                                onClick={() => {
+                                  const fd = new FormData(formRef.current ?? undefined);
+                                  fd.set('replaceCart', 'true');
+                                  addToCartFetcher.submit(fd, {
+                                    method: 'post',
+                                    action: '/api/cart/line-items/create',
+                                  });
+                                }}
+                              >
+                                Clear cart and add sushi
+                              </Button>
+                            </div>
+                          )}
+
                           <div className="my-2 flex flex-col gap-2">
                             <div className="flex items-center gap-4 py-2">
                               {!soldOut && <QuantitySelector variant={selectedVariant} />}
                               <div className="flex-1">
                                 {!soldOut ? (
                                   <SubmitButton className="!h-12 w-full whitespace-nowrap !text-base !font-bold">
-                                    {isAddingToCart ? 'Adding...' : 'Add to cart'}
+                                    {isAddingToCart
+                                      ? 'Adding...'
+                                      : sushiMode
+                                        ? 'Add bundle to cart'
+                                        : 'Add to cart'}
                                   </SubmitButton>
                                 ) : (
                                   <SubmitButton
@@ -421,7 +465,9 @@ export const ProductTemplate = ({ product, reviewsCount, reviewStats }: ProductT
 
                             {!!product.description && (
                               <div className="mt-4">
-                                <h3 className="mb-2">Description</h3>
+                                <h3 className="mb-2">
+                                  {sushiMode ? 'Bundle contents' : 'Description'}
+                                </h3>
                                 <div className="whitespace-pre-wrap text-base text-primary-800">
                                   {product.description}
                                 </div>

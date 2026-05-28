@@ -1,4 +1,4 @@
-import { Calendar, ListBullet, SquaresPlus } from '@medusajs/icons';
+import { Calendar, ListBullet, ShoppingBag, SquaresPlus, TruckFast } from '@medusajs/icons';
 import type { MenuConfig } from '@unlockable/vite-plugin-unlock/medusa';
 
 /**
@@ -25,8 +25,27 @@ const config: MenuConfig = {
       label: 'Events',
       to: '/chef-events',
     },
+    {
+      icon: ShoppingBag,
+      label: 'Sushi Products',
+      to: '/sushi-products',
+    },
+    {
+      icon: TruckFast,
+      label: 'Delivery Settings',
+      to: '/sushi-delivery-settings',
+    },
   ],
-  order: ['/chef-events', '/orders', '/menus', '/experience-types', '/customers', '/promotions'],
+  order: [
+    '/chef-events',
+    '/orders',
+    '/sushi-products',
+    '/sushi-delivery-settings',
+    '/menus',
+    '/experience-types',
+    '/customers',
+    '/promotions',
+  ],
 };
 
 export default config;

@@ -2,6 +2,8 @@ import { Alert } from '@app/components/common/alert/Alert';
 import { useCheckout } from '@app/hooks/useCheckout';
 import { useCustomer } from '@app/hooks/useCustomer';
 import { isDigitalOnlyCart } from '@libs/util/cart/cart-helpers';
+import { cartContainsSushiItems } from '@libs/util/sushi';
+import { CheckoutSushiFulfillment } from './CheckoutSushiFulfillment';
 import { FC, useEffect } from 'react';
 import { CheckoutAccountDetails } from './CheckoutAccountDetails';
 import { CheckoutDeliveryMethod } from './CheckoutDeliveryMethod';
@@ -13,6 +15,7 @@ export const CheckoutFlow: FC = () => {
   const { goToNextStep, cart, shippingOptions } = useCheckout();
   const isLoggedIn = !!customer?.id;
   const isDigitalOnly = isDigitalOnlyCart(cart, shippingOptions);
+  const isSushiCheckout = cartContainsSushiItems(cart);
 
   if (!cart) return;
 
@@ -37,7 +40,14 @@ export const CheckoutFlow: FC = () => {
 
         <CheckoutAccountDetails isDigitalOnly={isDigitalOnly} />
 
-        {!isDigitalOnly && (
+        {isSushiCheckout && (
+          <>
+            <hr className="my-10" />
+            <CheckoutSushiFulfillment />
+          </>
+        )}
+
+        {!isDigitalOnly && !isSushiCheckout && (
           <>
             <hr className="my-10" />
             <CheckoutDeliveryMethod />
