@@ -1,12 +1,15 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
-import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
+import {
+  ContainerRegistrationKeys,
+  MedusaError,
+} from "@medusajs/framework/utils"
 import { z } from "zod"
 import { createSushiProductWorkflow } from "../../../workflows/create-sushi-product"
 
 const createSchema = z.object({
-  title: z.string().min(1),
+  title: z.string().trim().min(1, "Title is required"),
   description: z.string().default(""),
-  price_cents: z.number().int().positive(),
+  price_cents: z.number().int().positive("Price must be greater than zero"),
   inventory_quantity: z.number().int().min(0).default(0),
   thumbnail: z.string().nullable().optional(),
   status: z.enum(["draft", "published"]).optional(),
@@ -47,9 +50,27 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       .json({ message: "Validation error", errors: parsed.error.issues })
   }
 
-  const { result } = await createSushiProductWorkflow(req.scope).run({
-    input: parsed.data,
-  })
+  try {
+    const { result } = await createSushiProductWorkflow(req.scope).run({
+      input: parsed.data,
+    })
 
-  res.status(201).json({ product: result })
+    res.status(201).json({ product: result })
+  } catch (error) {
+    const message =
+      error instanceof MedusaError
+        ? error.message
+        : error instanceof Error
+          ? error.message
+          : "Failed to create sushi product"
+
+    const status =
+      error instanceof MedusaError &&
+      (error.type === MedusaError.Types.INVALID_DATA ||
+        error.type === MedusaError.Types.NOT_ALLOWED)
+        ? 400
+        : 500
+
+    res.status(status).json({ message })
+  }
 }

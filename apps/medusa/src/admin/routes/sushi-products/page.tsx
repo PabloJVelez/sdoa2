@@ -1,5 +1,5 @@
 import { defineRouteConfig } from "@medusajs/admin-sdk"
-import { Button, Container, Heading, Input, Label, Select, Text, Textarea } from "@medusajs/ui"
+import { Button, Container, Heading, Input, Label, Select, Text, Textarea, toast } from "@medusajs/ui"
 import { useState } from "react"
 import {
   useAdminCreateSushiProduct,
@@ -18,15 +18,40 @@ const SushiProductsPage = () => {
   const products = data?.products ?? []
 
   const handleCreate = async () => {
-    await createMutation.mutateAsync({
-      title,
-      description,
-      price_cents: Math.round(Number(price) * 100),
-      inventory_quantity: Number(inventory) || 0,
-      status,
-    })
-    setTitle("")
-    setDescription("")
+    const trimmedTitle = title.trim()
+    if (!trimmedTitle) {
+      toast.error("Title required", {
+        description: "Enter a product title before saving.",
+      })
+      return
+    }
+
+    const priceCents = Math.round(Number(price) * 100)
+    if (!Number.isFinite(priceCents) || priceCents <= 0) {
+      toast.error("Invalid price", {
+        description: "Enter a price greater than zero.",
+      })
+      return
+    }
+
+    try {
+      await createMutation.mutateAsync({
+        title: trimmedTitle,
+        description,
+        price_cents: priceCents,
+        inventory_quantity: Number(inventory) || 0,
+        status,
+      })
+      setTitle("")
+      setDescription("")
+      toast.success("Product saved", {
+        description: `"${trimmedTitle}" was created successfully.`,
+      })
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Failed to save sushi product"
+      toast.error("Save failed", { description: message })
+    }
   }
 
   return (
@@ -72,7 +97,12 @@ const SushiProductsPage = () => {
               </Select.Content>
             </Select>
           </div>
-          <Button onClick={handleCreate} isLoading={createMutation.isPending}>
+          <Button
+            type="button"
+            onClick={handleCreate}
+            isLoading={createMutation.isPending}
+            disabled={!title.trim() || createMutation.isPending}
+          >
             Save product
           </Button>
         </div>
