@@ -62,6 +62,21 @@ export const HeaderSideNav: FC<HeaderSideNavProps> = ({ open, setOpen, activeSec
                         <div className="flex flex-grow flex-col overflow-y-auto pb-4">
                           <div className="mt-5 flex flex-grow flex-col">
                             <nav className="flex-1 space-y-1" aria-label="Sidebar">
+                              <URLAwareNavLink
+                                url="/sushi"
+                                onClick={() => setOpen(false)}
+                                className={({ isActive }) =>
+                                  clsx(
+                                    'group flex items-center rounded-lg px-4 py-3 text-base font-medium transition-colors',
+                                    isActive
+                                      ? 'bg-accent-600/20 text-white border border-accent-600/40'
+                                      : 'text-white/80 hover:bg-white/10 hover:text-white',
+                                  )
+                                }
+                                prefetch="viewport"
+                              >
+                                <span className="flex-1">Order Sushi</span>
+                              </URLAwareNavLink>
                               {headerNavigationItems.map(({ id, new_tab, ...navItemProps }) => (
                                 <URLAwareNavLink
                                   key={id}

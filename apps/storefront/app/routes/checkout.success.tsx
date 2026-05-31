@@ -94,6 +94,7 @@ export default function CheckoutSuccessRoute() {
                     <p className="flex-none font-bold text-gray-900">
                       {formatPrice((item.unit_price || 0), {
                         currency: order.currency_code,
+                        inCents: true,
                       })}
                     </p>
                   </li>
@@ -107,6 +108,7 @@ export default function CheckoutSuccessRoute() {
                 <dd className="text-gray-900">
                   {formatPrice((order.item_subtotal || 0), {
                     currency: order.currency_code,
+                    inCents: true,
                   })}
                 </dd>
               </div>
@@ -117,6 +119,7 @@ export default function CheckoutSuccessRoute() {
                   <dd className="text-gray-900">
                     {formatPrice(-discountTotal, {
                       currency: order.currency_code,
+                      inCents: true,
                     })}
                   </dd>
                 </div>
@@ -129,6 +132,7 @@ export default function CheckoutSuccessRoute() {
                   <dd className="text-gray-900">
                     {formatPrice((order.shipping_total || 0), {
                       currency: order.currency_code,
+                      inCents: true,
                     })}
                   </dd>
                 </div>
@@ -139,6 +143,7 @@ export default function CheckoutSuccessRoute() {
                 <dd className="text-gray-900">
                   {formatPrice((order.total || 0), {
                     currency: order.currency_code,
+                    inCents: true,
                   })}
                 </dd>
               </div>

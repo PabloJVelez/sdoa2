@@ -4,8 +4,15 @@ import { Empty } from '@app/components/common/Empty/Empty';
 import { Button } from '@app/components/common/buttons/Button';
 import { CheckoutProvider } from '@app/providers/checkout-provider';
 import ShoppingCartIcon from '@heroicons/react/24/outline/ShoppingCartIcon';
-import { filterShippingOptionsForCart, hasOnlyDigitalItems, isDigitalShippingOption } from '@libs/util/cart/cart-helpers';
-import { sdk } from '@libs/util/server/client.server';
+import {
+  filterShippingOptionsForCart,
+  hasOnlyDigitalItems,
+  isDigitalShippingOption,
+  isSushiPickupShippingOption,
+} from '@libs/util/cart/cart-helpers';
+import { cartContainsSushiItems, cartHasSushiFoodItems } from '@libs/util/sushi';
+import { sdk, baseMedusaConfig } from '@libs/util/server/client.server';
+import { config } from '@libs/util/server/config.server';
 import { getCartId, removeCartId } from '@libs/util/server/cookies.server';
 import { initiatePaymentSession, retrieveCart, setShippingMethod } from '@libs/util/server/data/cart.server';
 import { listCartPaymentProviders } from '@libs/util/server/data/payment.server';
@@ -40,9 +47,36 @@ const findCheapestShippingOption = (shippingOptions: StoreCartShippingOption[]) 
   }, shippingOptions[0]);
 };
 
+const prepareSushiCheckout = async (cartId: string) => {
+  try {
+    await fetch(`${baseMedusaConfig.baseUrl}/store/sushi/carts/${cartId}/prepare-checkout`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(config.MEDUSA_PUBLISHABLE_KEY
+          ? { 'x-publishable-api-key': config.MEDUSA_PUBLISHABLE_KEY }
+          : {}),
+      },
+    });
+  } catch (e) {
+    console.error('Failed to prepare sushi checkout', e);
+  }
+};
+
 const ensureSelectedCartShippingMethod = async (request: Request, cart: StoreCart) => {
   const shippingOptions = await fetchShippingOptions(cart.id);
   if (shippingOptions.length === 0) return;
+
+  if (cartContainsSushiItems(cart)) {
+    const pickupOption = shippingOptions.find(isSushiPickupShippingOption);
+    if (pickupOption) {
+      const currentMethod = cart.shipping_methods?.[0];
+      if (!currentMethod || currentMethod.shipping_option_id !== pickupOption.id) {
+        await setShippingMethod(request, { cartId: cart.id, shippingOptionId: pickupOption.id });
+      }
+    }
+    return;
+  }
 
   // For digital-only carts, always ensure the digital delivery option is selected
   if (hasOnlyDigitalItems(cart)) {
@@ -131,6 +165,14 @@ export const loader = async ({
     await removeCartId(headers);
 
     throw redirect(`/`, { headers });
+  }
+
+  if (cartHasSushiFoodItems(cart)) {
+    const metadata = (cart.metadata ?? {}) as Record<string, unknown>;
+    if (!metadata.sushi_fulfillment_type) {
+      throw redirect('/sushi/checkout');
+    }
+    await prepareSushiCheckout(cart.id);
   }
 
   await ensureSelectedCartShippingMethod(request, cart);

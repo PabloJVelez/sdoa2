@@ -50,14 +50,14 @@ export const ProductOptionSelectorSelect: FC<ProductOptionSelectorProps> = ({
     if (optionValue.minPrice !== undefined && optionValue.maxPrice !== undefined) {
       if (optionValue.minPrice === optionValue.maxPrice) {
         // Single price
-        label += ` - ${formatPrice(optionValue.minPrice, { currency: currencyCode })}`;
+        label += ` - ${formatPrice(optionValue.minPrice, { currency: currencyCode, inCents: true })}`;
       } else {
         // Price range
-        label += ` - ${formatPrice(optionValue.minPrice, { currency: currencyCode })} – ${formatPrice(optionValue.maxPrice, { currency: currencyCode })}`;
+        label += ` - ${formatPrice(optionValue.minPrice, { currency: currencyCode, inCents: true })} – ${formatPrice(optionValue.maxPrice, { currency: currencyCode, inCents: true })}`;
       }
     } else if (optionValue.exactPrice !== undefined) {
       // Exact price
-      label += ` - ${formatPrice(optionValue.exactPrice, { currency: currencyCode })}`;
+      label += ` - ${formatPrice(optionValue.exactPrice, { currency: currencyCode, inCents: true })}`;
 
       // Add discount if available
       if (optionValue.discountPercentage) {

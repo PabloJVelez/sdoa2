@@ -274,6 +274,8 @@ export function getVariantFromSelectedOptions(
  * Detects if a product is an event product based on SKU pattern
  * Event products have SKU pattern: EVENT-{eventId}-{date}-{type}
  */
+export { isSushiProduct } from './sushi';
+
 export const isEventProduct = (product: StoreProduct): boolean => {
   // Check if any variant has an EVENT- SKU pattern
   return product.variants?.some(variant => 
@@ -336,6 +338,7 @@ export const getProductMeta: MetaFunction = ({ data, matches }) => {
       property: 'product:price:amount',
       content: formatPrice(getVariantFinalPrice(defaultVariant), {
         currency: region.currency_code,
+        inCents: true,
       }),
     },
   ];

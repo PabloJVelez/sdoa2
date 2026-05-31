@@ -4,6 +4,7 @@ import { HttpTypes, StoreCart } from '@medusajs/types';
 import omit from 'lodash.omit';
 import { withAuthHeaders } from '../auth.server';
 import { getCartId } from '../cookies.server';
+import { fetchSushiProductById } from '../sushi-products.server';
 import { getProductsById } from './products.server';
 import { getSelectedRegion } from './regions.server';
 import { STRIPE_CONNECT_PROVIDER_ID, isStaleStripeConnectPaymentSession } from '@libs/util/stripe/stripe-connect-session';
@@ -177,30 +178,37 @@ export async function enrichLineItems(
 ) {
   if (!lineItems?.length) return [];
 
-  // Prepare query parameters
-  const queryParams = {
-    ids: lineItems.map((lineItem) => lineItem.product_id!),
-    regionId: regionId,
-  };
+  const productIds = [
+    ...new Set(lineItems.map((lineItem) => lineItem.product_id).filter(Boolean)),
+  ] as string[];
 
-  // Fetch products by their IDs
-  const products = await getProductsById(queryParams);
-  // If there are no line items or products, return an empty array
-  if (!products?.length) {
-    return [];
+  let products = await getProductsById({
+    ids: productIds,
+    regionId,
+  }).catch(() => []);
+
+  const foundProductIds = new Set(products.map((p) => p.id));
+  const missingProductIds = productIds.filter((id) => !foundProductIds.has(id));
+
+  if (missingProductIds.length > 0) {
+    const sushiProducts = await Promise.all(
+      missingProductIds.map((id) => fetchSushiProductById(id)),
+    );
+    products = [...products, ...sushiProducts.filter((p): p is NonNullable<typeof p> => !!p)];
   }
 
-  // Enrich line items with product and variant information
-  const enrichedItems = lineItems.map((item) => {
-    const product = products.find((p: any) => p.id === item.product_id);
-    const variant = product?.variants?.find((v: any) => v.id === item.variant_id);
+  if (!products.length) {
+    return lineItems as HttpTypes.StoreCartLineItem[];
+  }
 
-    // If product or variant is not found, return the original item
+  const enrichedItems = lineItems.map((item) => {
+    const product = products.find((p) => p.id === item.product_id);
+    const variant = product?.variants?.find((v) => v.id === item.variant_id);
+
     if (!product || !variant) {
       return item;
     }
 
-    // If product and variant are found, enrich the item
     return {
       ...item,
       variant: {

@@ -1,4 +1,5 @@
 import { FetcherKeys } from '@libs/util/fetcher-keys';
+import { cartContainsSushiItems } from '@libs/util/sushi';
 import { StoreCart } from '@medusajs/types';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useFetchers } from 'react-router';
@@ -37,7 +38,7 @@ export const useCart = () => {
       (f) =>
         f.key === FetcherKeys.cart.createLineItem &&
         (f.state === 'submitting' || f.state === 'loading') &&
-        f.formData?.has('variantId'),
+        (f.formData?.has('variantId') || f.formData?.has('productId')),
     ),
   };
 
@@ -126,6 +127,14 @@ export const useCart = () => {
   // Ensure cartDrawerOpen is always a boolean
   const cartDrawerOpen = state.cart.open === true;
 
+  const getCheckoutPath = useCallback(() => {
+    return cart && cartContainsSushiItems(cart) ? '/sushi/checkout' : '/checkout';
+  }, [cart]);
+
+  const closeCartDrawerForCheckout = useCallback(() => {
+    toggleCartDrawer(false);
+  }, [toggleCartDrawer]);
+
   return {
     cart,
     isAddingItem,
@@ -134,5 +143,7 @@ export const useCart = () => {
     cartDrawerOpen,
     toggleCartDrawer,
     showEmptyCartMessage,
+    getCheckoutPath,
+    closeCartDrawerForCheckout,
   };
 };

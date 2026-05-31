@@ -59,14 +59,14 @@ export const ProductOptionSelectorRadio: FC<ProductOptionSelectorProps> = ({
           if (optionValue.minPrice !== undefined && optionValue.maxPrice !== undefined) {
             if (optionValue.minPrice === optionValue.maxPrice) {
               // Single price
-              priceDisplay = formatPrice(optionValue.minPrice, { currency: currencyCode });
+              priceDisplay = formatPrice(optionValue.minPrice, { currency: currencyCode, inCents: true });
             } else {
               // Price range
-              priceDisplay = `${formatPrice(optionValue.minPrice, { currency: currencyCode })} – ${formatPrice(optionValue.maxPrice, { currency: currencyCode })}`;
+              priceDisplay = `${formatPrice(optionValue.minPrice, { currency: currencyCode, inCents: true })} – ${formatPrice(optionValue.maxPrice, { currency: currencyCode, inCents: true })}`;
             }
           } else if (optionValue.exactPrice !== undefined) {
             // Exact price
-            priceDisplay = formatPrice(optionValue.exactPrice, { currency: currencyCode });
+            priceDisplay = formatPrice(optionValue.exactPrice, { currency: currencyCode, inCents: true });
 
             // Format discount if available
             if (optionValue.discountPercentage) {

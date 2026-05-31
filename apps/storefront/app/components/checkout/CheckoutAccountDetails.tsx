@@ -29,9 +29,13 @@ const NEW_SHIPPING_ADDRESS_ID = 'new';
 
 export interface CheckoutAccountDetailsProps {
   isDigitalOnly?: boolean;
+  shippingAddressLabel?: string;
 }
 
-export const CheckoutAccountDetails = ({ isDigitalOnly = false }: CheckoutAccountDetailsProps) => {
+export const CheckoutAccountDetails = ({
+  isDigitalOnly = false,
+  shippingAddressLabel = 'Shipping Address',
+}: CheckoutAccountDetailsProps) => {
   const checkoutAccountDetailsFormFetcher = useFetcher<{
     errors: FieldErrors;
   }>({ key: FetcherKeys.cart.accountDetails });
@@ -146,7 +150,7 @@ export const CheckoutAccountDetails = ({ isDigitalOnly = false }: CheckoutAccoun
       </CheckoutSectionHeader>
 
       {!isActiveStep && isComplete && !isDigitalOnly && (
-        <AddressDisplay title="Shipping Address" address={shippingAddress} countryOptions={countryOptions} />
+        <AddressDisplay title={shippingAddressLabel} address={shippingAddress} countryOptions={countryOptions} />
       )}
 
       {isActiveStep && (

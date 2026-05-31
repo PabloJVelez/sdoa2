@@ -149,6 +149,8 @@ export const CartDrawer: FC = () => {
     isRemovingItemId,
     isRemovingLastItem,
     showEmptyCartMessage,
+    getCheckoutPath,
+    closeCartDrawerForCheckout,
   } = useCart();
   const { region } = useRegion();
   const allFetchers = useFetchers();
@@ -172,12 +174,10 @@ export const CartDrawer: FC = () => {
 
   const handleCheckoutClick = useCallback(() => {
     setNavigatingToCheckout(true);
-    navigate('/checkout');
-    setTimeout(() => {
-      toggleCartDrawer(false);
-      setNavigatingToCheckout(false);
-    }, 750);
-  }, [navigate, toggleCartDrawer]);
+    closeCartDrawerForCheckout();
+    navigate(getCheckoutPath());
+    setNavigatingToCheckout(false);
+  }, [navigate, closeCartDrawerForCheckout, getCheckoutPath]);
 
   const handleClose = useCallback(() => {
     toggleCartDrawer(false);

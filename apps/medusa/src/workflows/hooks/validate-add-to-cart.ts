@@ -1,6 +1,13 @@
 import { MedusaError } from "@medusajs/framework/utils"
-import { addToCartWorkflow } from "@medusajs/core-flows"
+import { addToCartWorkflow } from "@medusajs/medusa/core-flows"
+import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 import { getSystemChargeVariantId } from "../../lib/system-charge-variant"
+import {
+  cartContainsEventItems,
+  cartContainsSushiItems,
+} from "../../lib/sushi/product"
+import { SUSHI_DELIVERY_FEE_LINE_KIND } from "../../lib/sushi/constants"
+import { getSushiDeliveryFeeVariantId } from "../../lib/sushi/delivery-fee-variant"
 
 const CHARGE_LINE_KIND = "chef_event_additional_charge"
 
@@ -46,8 +53,29 @@ addToCartWorkflow.hooks.validate(async ({ input, cart }, { container }) => {
     }
   }
 
-  // Resolve once per validate call; downstream guards still apply per-item.
   const systemChargeVariantId = await getSystemChargeVariantId(container)
+  const sushiDeliveryFeeVariantId = await getSushiDeliveryFeeVariantId(container)
+  const hasEventItems = cartContainsEventItems(existingItems)
+  const hasSushiItems = cartContainsSushiItems(existingItems)
+
+  const query = container.resolve(ContainerRegistrationKeys.QUERY)
+  const incomingVariantIds = incomingItems
+    .map((item) => item.variant_id)
+    .filter((id): id is string => typeof id === "string")
+
+  let incomingIncludesSushi = false
+  if (incomingVariantIds.length) {
+    const { data: variants } = await query.graph({
+      entity: "product_variant",
+      fields: ["id", "sku", "product.metadata"],
+      filters: { id: incomingVariantIds },
+    })
+    incomingIncludesSushi = (variants ?? []).some((variant) => {
+      const metadata = (variant as { product?: { metadata?: Record<string, unknown> } })
+        .product?.metadata
+      return metadata?.order_flow === "sushi"
+    })
+  }
 
   for (const item of incomingItems) {
     const metadata = (item.metadata ?? {}) as Record<string, unknown>
@@ -55,6 +83,20 @@ addToCartWorkflow.hooks.validate(async ({ input, cart }, { container }) => {
       metadata.kind === CHARGE_LINE_KIND ||
       (systemChargeVariantId !== null &&
         item.variant_id === systemChargeVariantId)
+    const isDeliveryFeeLine =
+      metadata.kind === SUSHI_DELIVERY_FEE_LINE_KIND ||
+      (sushiDeliveryFeeVariantId !== null &&
+        item.variant_id === sushiDeliveryFeeVariantId)
+
+    if (isDeliveryFeeLine) {
+      if (!hasSushiItems && !incomingIncludesSushi) {
+        throw new MedusaError(
+          MedusaError.Types.NOT_ALLOWED,
+          "Delivery fee lines are only allowed in sushi carts",
+        )
+      }
+      continue
+    }
 
     if (isChargeLine) {
       if (item.variant_id !== systemChargeVariantId) {
@@ -84,6 +126,24 @@ addToCartWorkflow.hooks.validate(async ({ input, cart }, { container }) => {
       typeof metadata.chef_event_id === "string"
         ? metadata.chef_event_id
         : null
+
+    if (incomingIncludesSushi && (hasEventItems || existingEventIds.size > 0)) {
+      throw new MedusaError(
+        MedusaError.Types.NOT_ALLOWED,
+        "SUSHI_EVENT_CART_CONFLICT",
+      )
+    }
+
+    if (
+      (hasSushiItems || incomingIncludesSushi) &&
+      (hasEventItems || existingEventIds.size > 0 || incomingEventId)
+    ) {
+      throw new MedusaError(
+        MedusaError.Types.NOT_ALLOWED,
+        "SUSHI_EVENT_CART_CONFLICT",
+      )
+    }
+
     if (existingEventIds.size === 0) {
       continue
     }
