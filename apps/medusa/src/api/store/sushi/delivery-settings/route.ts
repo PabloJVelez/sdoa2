@@ -13,6 +13,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
       enable_pickup: settings.enable_pickup,
       enable_delivery: settings.enable_delivery,
       allowed_days: settings.allowed_days,
+      store_timezone: settings.store_timezone ?? "America/Chicago",
       max_radius_miles: settings.max_radius_miles,
       price_per_mile: settings.price_per_mile,
     },

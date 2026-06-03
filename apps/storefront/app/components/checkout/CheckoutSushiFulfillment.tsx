@@ -1,4 +1,5 @@
 import { Button } from '@app/components/common/buttons/Button';
+import { SushiSchedulePicker } from '@app/components/sushi/SushiSchedulePicker';
 import { useCheckout } from '@app/hooks/useCheckout';
 import { cartContainsSushiItems } from '@libs/util/sushi';
 import { formatPrice } from '@libs/util/prices';
@@ -9,6 +10,7 @@ type DeliverySettings = {
   enable_pickup: boolean;
   enable_delivery: boolean;
   allowed_days: Array<{ day: string; windows: Array<{ start: string; end: string }> }>;
+  store_timezone: string;
   price_per_mile: number;
   max_radius_miles: number;
 };
@@ -16,7 +18,7 @@ type DeliverySettings = {
 export const CheckoutSushiFulfillment: FC = () => {
   const { cart } = useCheckout();
   const fetcher = useFetcher<{ error?: string; outOfRange?: boolean; orderRequestId?: string; miles?: number; deliveryFeeCents?: number }>();
-  const settingsFetcher = useFetcher<{ settings?: DeliverySettings }>();
+  const settingsFetcher = useFetcher<{ settings?: DeliverySettings | null }>();
 
   const [fulfillmentType, setFulfillmentType] = useState<'pickup' | 'delivery'>('pickup');
   const [scheduledAt, setScheduledAt] = useState('');
@@ -75,7 +77,7 @@ export const CheckoutSushiFulfillment: FC = () => {
       )}
       <div className="flex flex-col gap-4">
         <div className="flex gap-4">
-          {settings?.enable_pickup !== false && (
+          {settings?.enable_pickup && (
             <label className="flex items-center gap-2">
               <input
                 type="radio"
@@ -86,7 +88,7 @@ export const CheckoutSushiFulfillment: FC = () => {
               Pickup
             </label>
           )}
-          {settings?.enable_delivery !== false && (
+          {settings?.enable_delivery && (
             <label className="flex items-center gap-2">
               <input
                 type="radio"
@@ -99,19 +101,21 @@ export const CheckoutSushiFulfillment: FC = () => {
           )}
         </div>
 
-        <div>
-          <label className="text-sm font-medium text-gray-700" htmlFor="scheduled_at">
-            Date & time
-          </label>
-          <input
-            id="scheduled_at"
-            type="datetime-local"
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
-            value={scheduledAt}
-            onChange={(e) => setScheduledAt(e.target.value)}
-            required
-          />
-        </div>
+        {settings ? (
+          <div>
+            <p className="text-sm font-medium text-gray-700">Date &amp; time</p>
+            <div className="mt-1">
+              <SushiSchedulePicker
+                allowedDays={settings.allowed_days}
+                storeTimezone={settings.store_timezone}
+                value={scheduledAt}
+                onChange={setScheduledAt}
+              />
+            </div>
+          </div>
+        ) : (
+          <p className="text-sm text-gray-600">Loading available pickup and delivery times…</p>
+        )}
 
         {fulfillmentType === 'delivery' && (
           <div>
@@ -146,7 +150,11 @@ export const CheckoutSushiFulfillment: FC = () => {
           <p className="text-sm text-red-600">{fetcher.data.error}</p>
         )}
 
-        <Button type="button" onClick={handleSubmit} disabled={fetcher.state !== 'idle'}>
+        <Button
+          type="button"
+          onClick={handleSubmit}
+          disabled={fetcher.state !== 'idle' || !scheduledAt || !settings}
+        >
           {fetcher.state !== 'idle' ? 'Saving…' : 'Save fulfillment details'}
         </Button>
       </div>

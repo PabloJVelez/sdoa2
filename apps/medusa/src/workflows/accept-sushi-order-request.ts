@@ -17,8 +17,8 @@ import {
 import {
   ensureSushiCartShippingMethod,
   getCartSnapshotLineItems,
-  getCartSnapshotSubtotalCents,
   parseCartSnapshot,
+  resolveOrderRequestFoodSubtotalCents,
   SUSHI_ORDER_FLOW,
 } from "../lib/sushi"
 import { SUSHI_DELIVERY_MODULE } from "../modules/sushi-delivery"
@@ -108,7 +108,7 @@ const acceptSushiOrderRequestStep = createStep(
     const variantIds = lineItems.map((item) => item.variant_id)
     const { data: variants } = await query.graph({
       entity: "product_variant",
-      fields: ["id", "sku", "prices.amount", "prices.currency_code"],
+      fields: ["id", "sku"],
       filters: { id: variantIds },
     })
 
@@ -126,7 +126,6 @@ const acceptSushiOrderRequestStep = createStep(
     const itemsToAdd: Array<{
       variant_id: string
       quantity: number
-      unit_price?: number
       metadata: Record<string, unknown>
     }> = []
 
@@ -136,22 +135,9 @@ const acceptSushiOrderRequestStep = createStep(
         continue
       }
 
-      const usdPrice = (variant.prices ?? []).find(
-        (price: { currency_code?: string }) =>
-          price?.currency_code?.toLowerCase?.() === "usd",
-      )
-      const priceCents = Math.round(Number(usdPrice?.amount ?? 0))
-      const unitPrice =
-        priceCents > 0
-          ? priceCents / 100
-          : typeof line.unit_price === "number"
-            ? line.unit_price
-            : undefined
-
       itemsToAdd.push({
         variant_id: line.variant_id,
         quantity: line.quantity,
-        ...(unitPrice != null ? { unit_price: unitPrice } : {}),
         metadata: {
           order_flow: SUSHI_ORDER_FLOW,
           sushi_order_request_id: request.id,
@@ -212,8 +198,10 @@ const acceptSushiOrderRequestStep = createStep(
       id: request.id,
       status: "confirmed",
       delivery_fee_cents: input.delivery_fee_cents,
-      subtotal_cents:
-        request.subtotal_cents ?? getCartSnapshotSubtotalCents(snapshot),
+      subtotal_cents: resolveOrderRequestFoodSubtotalCents({
+        subtotal_cents: request.subtotal_cents,
+        cart_snapshot: snapshot,
+      }),
       payment_cart_id: cart.id,
       accepted_at: new Date(),
     })

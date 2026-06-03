@@ -5,7 +5,10 @@ import {
 } from "@medusajs/framework/utils"
 import { z } from "zod"
 import { ensureSushiProductStoreReady } from "../../../lib/sushi/ensure-sushi-product-store"
-import { getVariantAvailableQuantity } from "../../../lib/sushi/variant-inventory"
+import {
+  enrichAdminSushiProductVariants,
+} from "../../../lib/sushi/variant-inventory"
+import { adminSushiProductFields } from "../../../lib/sushi/admin-product-fields"
 import { createSushiProductWorkflow } from "../../../workflows/create-sushi-product"
 
 const createSchema = z.object({
@@ -22,22 +25,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
   const query = req.scope.resolve(ContainerRegistrationKeys.QUERY)
   const { data: products } = await query.graph({
     entity: "product",
-    fields: [
-      "id",
-      "title",
-      "handle",
-      "description",
-      "thumbnail",
-      "images.id",
-      "images.url",
-      "images.rank",
-      "status",
-      "metadata",
-      "variants.id",
-      "variants.sku",
-      "variants.prices.amount",
-      "variants.inventory_quantity",
-    ],
+    fields: [...adminSushiProductFields],
   })
 
   const sushiProducts = (products ?? []).filter((product) => {
@@ -58,20 +46,7 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
         return product
       }
 
-      const withInventory = await Promise.all(
-        variants.map(async (variant) => {
-          const sku = variant.sku as string | undefined
-          const manageInventory = variant.manage_inventory === true
-          const inventory_quantity =
-            sku && manageInventory
-              ? await getVariantAvailableQuantity(req.scope, { variantSku: sku })
-              : (variant.inventory_quantity as number | undefined)
-
-          return { ...variant, inventory_quantity }
-        }),
-      )
-
-      return { ...product, variants: withInventory }
+      return enrichAdminSushiProductVariants(req.scope, product as never)
     }),
   )
 

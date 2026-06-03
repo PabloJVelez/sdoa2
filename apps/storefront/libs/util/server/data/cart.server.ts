@@ -65,9 +65,10 @@ export const addToCart = withAuthHeaders(
     data: {
       variantId: string;
       quantity: number;
+      metadata?: Record<string, unknown>;
     },
   ) => {
-    const { variantId, quantity } = data;
+    const { variantId, quantity, metadata } = data;
 
     if (!variantId) {
       throw new Error('Missing variant ID when adding to cart');
@@ -83,6 +84,7 @@ export const addToCart = withAuthHeaders(
           {
             variant_id: variantId,
             quantity,
+            ...(metadata ? { metadata } : {}),
           },
           {},
           authHeaders,
@@ -102,7 +104,7 @@ export const addToCart = withAuthHeaders(
     const region = await getSelectedRegion(request.headers);
     const cart = await createCart(request, { 
       region_id: region.id, 
-      items: [{ variant_id: variantId, quantity }] 
+      items: [{ variant_id: variantId, quantity, ...(metadata ? { metadata } : {}) }],
     });
 
     return cart;

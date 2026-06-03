@@ -1,10 +1,7 @@
 import { Alert, Button, Input, Label, Text, Textarea } from "@medusajs/ui"
 import { useState } from "react"
 import type { AdminSushiOrderRequestWarningDTO } from "../../../../sdk/admin/admin-sushi-delivery"
-import {
-  getCartSnapshotSubtotalCents,
-  parseCartSnapshot,
-} from "../../../../lib/sushi/cart-snapshot"
+import { resolveOrderRequestFoodSubtotalCents } from "../../../../lib/sushi/cart-snapshot"
 
 export type PendingDeliveryRequest = {
   id: string
@@ -40,10 +37,7 @@ function formatScheduled(value?: string) {
 }
 
 function resolveSubtotalCents(request: PendingDeliveryRequest): number {
-  if (request.subtotal_cents != null && request.subtotal_cents > 0) {
-    return request.subtotal_cents
-  }
-  return getCartSnapshotSubtotalCents(parseCartSnapshot(request.cart_snapshot))
+  return resolveOrderRequestFoodSubtotalCents(request)
 }
 
 export function PendingDeliveryRequestCard({

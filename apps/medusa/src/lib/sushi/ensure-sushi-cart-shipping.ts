@@ -55,19 +55,19 @@ export async function ensureSushiCartShippingMethod(
   const query = container.resolve(ContainerRegistrationKeys.QUERY)
   const { data: carts } = await query.graph({
     entity: "cart",
-    fields: ["id", "shipping_methods.id", "shipping_methods.name"],
+    fields: ["id", "shipping_methods.id", "shipping_methods.name", "shipping_methods.shipping_option_id"],
     filters: { id: cartId },
   })
 
   const cart = carts?.[0] as
     | {
-        shipping_methods?: Array<{ id?: string; name?: string }>
+        shipping_methods?: Array<{
+          id?: string
+          name?: string
+          shipping_option_id?: string
+        }>
       }
     | undefined
-
-  if (cart?.shipping_methods?.length) {
-    return
-  }
 
   const { result: shippingOptions } = await listShippingOptionsForCartWorkflow(
     container,
@@ -82,6 +82,11 @@ export async function ensureSushiCartShippingMethod(
 
   if (!optionId) {
     throw new Error("No shipping option available for sushi checkout")
+  }
+
+  const currentOptionId = cart?.shipping_methods?.[0]?.shipping_option_id
+  if (currentOptionId === optionId) {
+    return
   }
 
   await addShippingMethodToCartWorkflow(container).run({

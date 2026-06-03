@@ -75,19 +75,15 @@ const CartDrawerContent: FC<{
   isRemovingLastItem: boolean;
   currencyCode: string;
 }> = ({ items, isRemovingItemId, isAddingItem, showEmptyCartMessage, isRemovingLastItem, currencyCode }) => {
-  // Ensure we're correctly determining when to show items vs empty message
   const hasItems = items && items.length > 0;
 
   return (
     <div className="mt-8">
       <div className="flow-root">
-        {/* Show items when there are items in the cart */}
         {hasItems && <CartDrawerItems items={items} isRemovingItemId={isRemovingItemId} currencyCode={currencyCode} />}
 
-        {/* Show loading item when adding items */}
         {isAddingItem && <CartDrawerLoading className={clsx(hasItems ? 'pt-10' : 'py-0')} />}
 
-        {/* Only show empty cart message when cart is truly empty and not loading */}
         {!hasItems && !isAddingItem && <CartDrawerEmpty />}
       </div>
     </div>
@@ -155,16 +151,12 @@ export const CartDrawer: FC = () => {
   const { region } = useRegion();
   const allFetchers = useFetchers();
   const [navigatingToCheckout, setNavigatingToCheckout] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
 
-  // Track if any cart-related fetchers are active
   const isCartLoading = allFetchers.some(
     (f) => (f.state === 'submitting' || f.state === 'loading') && f.key.startsWith('cart:'),
   );
 
-  // Local state to control the dialog - initialize with cartDrawerOpen
-  const [isOpen, setIsOpen] = useState(false);
-
-  // Sync our local state with the cart drawer state
   useEffect(() => {
     setIsOpen(cartDrawerOpen === true);
   }, [cartDrawerOpen]);
@@ -174,9 +166,11 @@ export const CartDrawer: FC = () => {
 
   const handleCheckoutClick = useCallback(() => {
     setNavigatingToCheckout(true);
-    closeCartDrawerForCheckout();
     navigate(getCheckoutPath());
-    setNavigatingToCheckout(false);
+    setTimeout(() => {
+      closeCartDrawerForCheckout();
+      setNavigatingToCheckout(false);
+    }, 750);
   }, [navigate, closeCartDrawerForCheckout, getCheckoutPath]);
 
   const handleClose = useCallback(() => {
@@ -185,7 +179,6 @@ export const CartDrawer: FC = () => {
 
   return (
     <Dialog open={isOpen} onClose={handleClose} className="relative z-50">
-      {/* Backdrop with transition */}
       <DialogBackdrop
         transition
         className="fixed inset-0 bg-gray-300 bg-opacity-50 backdrop-blur-sm duration-300 ease-out data-[closed]:opacity-0"
@@ -194,13 +187,11 @@ export const CartDrawer: FC = () => {
       <div className="fixed inset-0 overflow-hidden">
         <div className="absolute inset-0 overflow-hidden">
           <div className="pointer-events-none fixed inset-y-0 right-0 flex max-w-full pl-10">
-            {/* Panel with transition */}
             <DialogPanel
               transition
               className="pointer-events-auto w-screen max-w-md transform duration-500 ease-in-out data-[closed]:translate-x-full"
             >
               <div className="flex h-full flex-col overflow-y-scroll bg-white shadow-xl">
-                {/* Content */}
                 <div className="flex-1 overflow-y-auto px-4 py-6 sm:px-6">
                   <CartDrawerHeader itemCount={lineItemsTotal} onClose={handleClose} />
 
@@ -214,7 +205,6 @@ export const CartDrawer: FC = () => {
                   />
                 </div>
 
-                {/* Footer */}
                 <CartDrawerFooter
                   navigatingToCheckout={navigatingToCheckout}
                   cart={cart}

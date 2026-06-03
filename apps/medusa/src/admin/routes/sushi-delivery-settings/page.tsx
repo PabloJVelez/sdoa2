@@ -5,7 +5,8 @@ import {
   useAdminSushiDeliverySettings,
   useAdminUpdateSushiDeliverySettings,
 } from "../../hooks/sushi-delivery"
-import { DEFAULT_ALLOWED_DAYS } from "../../../lib/sushi/schedule"
+import { DEFAULT_ALLOWED_DAYS, type AllowedDaySchedule } from "../../../lib/sushi/schedule"
+import { SushiScheduleEditor } from "../../components/sushi-schedule-editor"
 
 const SushiDeliverySettingsPage = () => {
   const { data: settings, isLoading } = useAdminSushiDeliverySettings()
@@ -16,9 +17,7 @@ const SushiDeliverySettingsPage = () => {
   const [storeTimezone, setStoreTimezone] = useState("America/Chicago")
   const [pricePerMile, setPricePerMile] = useState("2")
   const [maxRadius, setMaxRadius] = useState("15")
-  const [scheduleJson, setScheduleJson] = useState(
-    JSON.stringify(DEFAULT_ALLOWED_DAYS, null, 2),
-  )
+  const [allowedDays, setAllowedDays] = useState<AllowedDaySchedule[]>(DEFAULT_ALLOWED_DAYS)
   const [enablePickup, setEnablePickup] = useState(true)
   const [enableDelivery, setEnableDelivery] = useState(true)
 
@@ -29,19 +28,12 @@ const SushiDeliverySettingsPage = () => {
     setStoreTimezone(settings.store_timezone ?? "America/Chicago")
     setPricePerMile(String(settings.price_per_mile))
     setMaxRadius(String(settings.max_radius_miles))
-    setScheduleJson(JSON.stringify(settings.allowed_days, null, 2))
+    setAllowedDays(settings.allowed_days ?? DEFAULT_ALLOWED_DAYS)
     setEnablePickup(settings.enable_pickup)
     setEnableDelivery(settings.enable_delivery)
   }, [settings])
 
   const handleSave = async () => {
-    let allowedDays = DEFAULT_ALLOWED_DAYS
-    try {
-      allowedDays = JSON.parse(scheduleJson)
-    } catch {
-      return
-    }
-
     await updateMutation.mutateAsync({
       origin_address: originAddress,
       pickup_address: pickupAddress,
@@ -120,13 +112,10 @@ const SushiDeliverySettingsPage = () => {
             </div>
           </div>
           <div>
-            <Label>Allowed days & hours (JSON)</Label>
-            <Textarea
-              value={scheduleJson}
-              onChange={(e) => setScheduleJson(e.target.value)}
-              rows={12}
-              className="font-mono text-sm"
-            />
+            <Label>Pickup &amp; delivery hours</Label>
+            <div className="mt-2">
+              <SushiScheduleEditor value={allowedDays} onChange={setAllowedDays} />
+            </div>
           </div>
         </div>
       </div>

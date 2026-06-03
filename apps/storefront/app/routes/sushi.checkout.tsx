@@ -1,5 +1,7 @@
 import { Button } from '@app/components/common/buttons/Button';
 import { Container } from '@app/components/common/container';
+import { SushiSchedulePicker } from '@app/components/sushi/SushiSchedulePicker';
+import { useCart } from '@app/hooks/useCart';
 import { formatPrice } from '@libs/util/prices';
 import { cartHasSushiFoodItems } from '@libs/util/sushi';
 import { baseMedusaConfig } from '@libs/util/server/client.server';
@@ -14,6 +16,7 @@ type DeliverySettings = {
   enable_pickup: boolean;
   enable_delivery: boolean;
   allowed_days: Array<{ day: string; windows: Array<{ start: string; end: string }> }>;
+  store_timezone: string;
   price_per_mile: number;
   max_radius_miles: number;
 };
@@ -41,7 +44,14 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   });
 
   const settingsPayload = await settingsResponse.json().catch(() => ({}));
-  const settings = (settingsPayload.settings ?? null) as DeliverySettings | null;
+
+  if (!settingsResponse.ok || !settingsPayload.settings) {
+    throw new Response('Unable to load pickup and delivery settings. Please try again later.', {
+      status: 503,
+    });
+  }
+
+  const settings = settingsPayload.settings as DeliverySettings;
 
   return { cart, settings };
 };
@@ -67,10 +77,20 @@ export default function SushiCheckoutRoute() {
   const actionData = useActionData<typeof action>();
   const navigation = useNavigation();
   const isSubmitting = navigation.state === 'submitting';
+  const { closeCartDrawerForCheckout } = useCart();
 
-  const [fulfillmentType, setFulfillmentType] = useState<'pickup' | 'delivery'>('pickup');
+  const defaultFulfillmentType = settings.enable_pickup
+    ? 'pickup'
+    : settings.enable_delivery
+      ? 'delivery'
+      : 'pickup';
+
+  const [fulfillmentType, setFulfillmentType] = useState<'pickup' | 'delivery'>(defaultFulfillmentType);
   const [scheduledAt, setScheduledAt] = useState('');
   const [deliveryAddress, setDeliveryAddress] = useState('');
+  const [customerEmail, setCustomerEmail] = useState(cart.email ?? '');
+  const storeTimezone = settings.store_timezone;
+  const allowedDays = settings.allowed_days;
 
   return (
     <Container className="py-12">
@@ -85,11 +105,34 @@ export default function SushiCheckoutRoute() {
           </p>
         </div>
 
-        <Form method="post" className="flex flex-col gap-6">
-          <input type="hidden" name="customer_email" value={cart.email ?? ''} />
+        <Form
+          method="post"
+          className="flex flex-col gap-6"
+          onSubmit={() => closeCartDrawerForCheckout()}
+        >
+          <div>
+            <label className="text-sm font-medium text-gray-700" htmlFor="customer_email">
+              Email
+            </label>
+            <input
+              id="customer_email"
+              name="customer_email"
+              type="email"
+              autoComplete="email"
+              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
+              value={customerEmail}
+              onChange={(e) => setCustomerEmail(e.target.value)}
+              required
+            />
+            <p className="mt-1 text-xs text-gray-500">
+              {fulfillmentType === 'delivery'
+                ? 'We will email you when your delivery request is confirmed.'
+                : 'Used for your order confirmation and receipt.'}
+            </p>
+          </div>
 
           <fieldset className="flex gap-6">
-            {settings?.enable_pickup !== false && (
+            {settings.enable_pickup && (
               <label className="flex items-center gap-2">
                 <input
                   type="radio"
@@ -101,7 +144,7 @@ export default function SushiCheckoutRoute() {
                 Pickup
               </label>
             )}
-            {settings?.enable_delivery !== false && (
+            {settings.enable_delivery && (
               <label className="flex items-center gap-2">
                 <input
                   type="radio"
@@ -116,18 +159,15 @@ export default function SushiCheckoutRoute() {
           </fieldset>
 
           <div>
-            <label className="text-sm font-medium text-gray-700" htmlFor="scheduled_at">
-              Date &amp; time
-            </label>
-            <input
-              id="scheduled_at"
-              name="scheduled_at"
-              type="datetime-local"
-              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
-              value={scheduledAt}
-              onChange={(e) => setScheduledAt(e.target.value)}
-              required
-            />
+            <p className="text-sm font-medium text-gray-700">Date &amp; time</p>
+            <div className="mt-1">
+              <SushiSchedulePicker
+                allowedDays={allowedDays}
+                storeTimezone={storeTimezone}
+                value={scheduledAt}
+                onChange={setScheduledAt}
+              />
+            </div>
           </div>
 
           {fulfillmentType === 'delivery' && (
@@ -144,19 +184,25 @@ export default function SushiCheckoutRoute() {
                 onChange={(e) => setDeliveryAddress(e.target.value)}
                 required
               />
-              {settings && (
-                <p className="mt-1 text-xs text-gray-500">
-                  Delivery within {settings.max_radius_miles} miles ·{' '}
-                  {formatPrice(settings.price_per_mile, { currency: 'usd' })}/mile
-                </p>
-              )}
+              <p className="mt-1 text-xs text-gray-500">
+                Delivery within {settings.max_radius_miles} miles ·{' '}
+                {formatPrice(settings.price_per_mile, { currency: 'usd' })}/mile
+              </p>
             </div>
           )}
 
           {actionData?.error && <p className="text-sm text-red-600">{actionData.error}</p>}
 
-          <Button type="submit" disabled={isSubmitting} className="w-full">
-            {isSubmitting ? 'Saving…' : 'Continue to checkout'}
+          <Button
+            type="submit"
+            disabled={isSubmitting || !scheduledAt}
+            className="w-full"
+          >
+            {isSubmitting
+              ? 'Saving…'
+              : fulfillmentType === 'delivery'
+                ? 'Submit delivery request'
+                : 'Continue to checkout'}
           </Button>
         </Form>
       </div>

@@ -48,10 +48,10 @@ export function resolveAdminBaseUrl(): string {
 }
 
 export function resolveStorefrontBaseUrl(): string {
-  return process.env.STOREFRONT_URL ?? "http://localhost:5173"
+  return process.env.STOREFRONT_URL ?? "http://localhost:3000"
 }
 
 export function buildSushiPaymentCheckoutUrl(orderRequestId: string): string {
   const base = resolveStorefrontBaseUrl().replace(/\/$/, "")
-  return `${base}/sushi/order-requests/${orderRequestId}/checkout`
+  return `${base}/sushi/pay/${orderRequestId}`
 }

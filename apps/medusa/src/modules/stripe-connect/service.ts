@@ -38,7 +38,11 @@ import type {
   StripeConnectProviderOptions,
 } from './types';
 import { getPlatformFeeConfigFromEnv } from './utils/get-fee-config';
-import { getSmallestUnit } from './utils/get-smallest-unit';
+import {
+  getSmallestUnit,
+  resolveMajorAmount,
+  resolveStripeAmountInCents,
+} from './utils/get-smallest-unit';
 import { calculatePlatformFeeFromLines } from './utils/platform-fee';
 
 interface StripeConnectAccountService {
@@ -156,10 +160,10 @@ class StripeConnectProviderService extends AbstractPaymentProvider<StripeConnect
       return items.map((item) => ({
         sku: item.variant_sku ?? '',
         quantity: Number(item.quantity) || 0,
-        unit_price_cents: (() => {
-          const raw = Number(item.unit_price) || 0;
-          return Number.isInteger(raw) ? raw : getSmallestUnit(raw, currencyCode);
-        })(),
+        unit_price_cents: getSmallestUnit(
+          Math.max(0, Number(item.unit_price) || 0),
+          currencyCode,
+        ),
       }));
     } catch (e) {
       this.logger_.warn(`${StripeConnectProviderService.LOG_PREFIX} getCartLines failed: ${(e as Error).message}`);
@@ -218,7 +222,7 @@ class StripeConnectProviderService extends AbstractPaymentProvider<StripeConnect
 
   async initiatePayment(input: InitiatePaymentInput): Promise<InitiatePaymentOutput> {
     const { amount, currency_code, context, data: inputData } = input;
-    const amountInCents = getSmallestUnit(amount as unknown as number, currency_code);
+    const amountInCents = resolveStripeAmountInCents(amount, currency_code);
 
     const dataObj = inputData as Record<string, unknown> | undefined;
     const ctx = context as Record<string, unknown> | undefined;
@@ -470,7 +474,7 @@ class StripeConnectProviderService extends AbstractPaymentProvider<StripeConnect
       };
 
       if (amount) {
-        refundParams.amount = getSmallestUnit(amount as unknown as number, currencyCode);
+        refundParams.amount = resolveStripeAmountInCents(amount, currencyCode);
       }
 
       const refund = await this.stripe_.refunds.create(
@@ -659,7 +663,7 @@ class StripeConnectProviderService extends AbstractPaymentProvider<StripeConnect
       const updateParams: Stripe.PaymentIntentUpdateParams = {};
 
       if (amount !== undefined) {
-        const amountInCents = getSmallestUnit(amount as unknown as number, currency_code);
+        const amountInCents = resolveStripeAmountInCents(amount, currency_code);
         updateParams.amount = amountInCents;
 
         const applicationFeeAmount = this.calculateApplicationFee(amountInCents);

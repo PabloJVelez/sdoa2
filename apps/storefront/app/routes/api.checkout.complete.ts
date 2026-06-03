@@ -2,6 +2,9 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { addressPayload, addressToMedusaAddress, medusaAddressToAddress } from '@libs/util/addresses';
 import { removeCartId } from '@libs/util/server/cookies.server';
 import { initiatePaymentSession, placeOrder, retrieveCart, updateCart } from '@libs/util/server/data/cart.server';
+import { cartContainsSushiItems } from '@libs/util/sushi';
+import { baseMedusaConfig } from '@libs/util/server/client.server';
+import { config } from '@libs/util/server/config.server';
 import type { StoreCart } from '@medusajs/types';
 import type { ActionFunctionArgs } from 'react-router';
 import { redirect, data as remixData } from 'react-router';
@@ -37,6 +40,30 @@ export const completeCheckoutSchema = z
 
 export type CompleteCheckoutFormData = z.infer<typeof completeCheckoutSchema>;
 
+async function prepareSushiCheckout(cartId: string) {
+  const response = await fetch(
+    `${baseMedusaConfig.baseUrl}/store/sushi/carts/${cartId}/prepare-checkout`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(config.MEDUSA_PUBLISHABLE_KEY
+          ? { 'x-publishable-api-key': config.MEDUSA_PUBLISHABLE_KEY }
+          : {}),
+      },
+    },
+  );
+
+  if (!response.ok) {
+    const payload = await response.json().catch(() => ({}));
+    const message =
+      typeof payload.message === 'string'
+        ? payload.message
+        : 'Unable to prepare sushi checkout';
+    throw new Error(message);
+  }
+}
+
 export async function action(actionArgs: ActionFunctionArgs) {
   const { errors, data } = await getValidatedFormData<CompleteCheckoutFormData>(
     actionArgs.request,
@@ -61,6 +88,19 @@ export async function action(actionArgs: ActionFunctionArgs) {
 
   cart = (await updateCart(actionArgs.request, updateData))?.cart;
 
+  if (cartContainsSushiItems(cart)) {
+    try {
+      await prepareSushiCheckout(cart.id);
+      cart = (await retrieveCart(actionArgs.request)) as StoreCart;
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message.replace(/\.$/, '')
+          : 'Unable to prepare sushi checkout';
+      return remixData({ errors: { root: { message } } }, { status: 400 });
+    }
+  }
+
   const activePaymentSession = cart.payment_collection?.payment_sessions?.find((ps) => ps.status === 'pending');
 
   if (activePaymentSession?.provider_id !== data.providerId || !cart.payment_collection?.payment_sessions?.length) {
@@ -73,13 +113,32 @@ export async function action(actionArgs: ActionFunctionArgs) {
   const isNewPaymentMethod = data.paymentMethodId === 'new';
 
   if (!isNewPaymentMethod && data.providerId === 'pp_stripe-connect_stripe-connect') {
-    await initiatePaymentSession(actionArgs.request, cart, {
-      provider_id: data.providerId,
-      data: { payment_method: data.paymentMethodId, cart_id: cart.id },
-    });
+    try {
+      await initiatePaymentSession(actionArgs.request, cart, {
+        provider_id: data.providerId,
+        data: { payment_method: data.paymentMethodId, cart_id: cart.id },
+      });
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message.replace(/\.$/, '')
+          : 'Unable to start payment. Please try again.';
+      return remixData({ errors: { root: { message } } }, { status: 400 });
+    }
   }
 
-  const cartResponse = await placeOrder(actionArgs.request);
+  cart = (await retrieveCart(actionArgs.request)) as StoreCart;
+
+  let cartResponse;
+  try {
+    cartResponse = await placeOrder(actionArgs.request);
+  } catch (error) {
+    const message =
+      error instanceof Error
+        ? error.message.replace(/\.$/, '')
+        : 'Checkout could not be completed. Please try again.';
+    return remixData({ errors: { root: { message } } }, { status: 400 });
+  }
 
   if (cartResponse.type === 'cart' || !cartResponse) {
     return remixData(

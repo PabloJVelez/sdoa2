@@ -1,5 +1,6 @@
 import { Button } from '@app/components/common/buttons/Button';
 import { Image } from '@app/components/common/images/Image';
+import { useCart } from '@app/hooks/useCart';
 import { useRemoveCartItem } from '@app/hooks/useRemoveCartItem';
 import { formatLineItemPrice } from '@libs/util/prices';
 import { StoreCartLineItem } from '@medusajs/types';
@@ -13,6 +14,7 @@ export interface CartDrawerItemProps {
 }
 
 export const CartDrawerItem: FC<CartDrawerItemProps> = ({ item, currencyCode, isRemoving }) => {
+  const { cart } = useCart();
   const removeCartItem = useRemoveCartItem();
   const handleRemoveFromCart = () => removeCartItem.submit(item);
   const metadata = (item.metadata ?? {}) as Record<string, unknown>
@@ -58,7 +60,7 @@ export const CartDrawerItem: FC<CartDrawerItemProps> = ({ item, currencyCode, is
           <p className="text-sm  text-gray-500">Qty {item.quantity}</p>
 
           <div className="flex">
-            <p className="ml-4">{formatLineItemPrice(item, currencyCode)}</p>
+            <p className="ml-4">{formatLineItemPrice(item, currencyCode, cart)}</p>
           </div>
         </div>
       </div>

@@ -112,6 +112,7 @@ export async function action({ request }: ActionFunctionArgs) {
     const { cart } = await addToCart(request, {
       variantId: finalVariant.id!,
       quantity,
+      ...(addingSushi ? { metadata: { order_flow: 'sushi' } } : {}),
     });
 
     await setCartId(responseHeaders, cart.id);

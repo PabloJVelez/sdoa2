@@ -11,6 +11,7 @@ import {
 } from "@medusajs/workflows-sdk"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 import { SUSHI_DELIVERY_FEE_LINE_KIND } from "../lib/sushi/constants"
+import { majorUnitsFromCents } from "../lib/sushi/pricing"
 import { getSushiDeliveryFeeVariantId } from "../lib/sushi/delivery-fee-variant"
 
 type UpsertInput = {
@@ -55,7 +56,7 @@ const upsertSushiDeliveryFeeLineStep = createStep(
           {
             variant_id: variantId,
             quantity: 1,
-            unit_price: input.delivery_fee_cents,
+            unit_price: majorUnitsFromCents(input.delivery_fee_cents),
             metadata: {
               kind: SUSHI_DELIVERY_FEE_LINE_KIND,
               order_flow: "sushi",

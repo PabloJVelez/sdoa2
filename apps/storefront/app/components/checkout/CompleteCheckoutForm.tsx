@@ -6,8 +6,8 @@ import { Checkbox, TextField } from '@lambdacurry/forms/remix-hook-form';
 import { type CustomPaymentSession, type MedusaAddress } from '@libs/types';
 import { emptyAddress, medusaAddressToAddress } from '@libs/util';
 import { FetcherKeys } from '@libs/util/fetcher-keys';
-import { FC, FormEvent, PropsWithChildren, useState } from 'react';
-import { SubmitFunction, useFetcher } from 'react-router';
+import { FC, FormEvent, PropsWithChildren, useEffect, useState } from 'react';
+import { useFetcher } from 'react-router';
 import { RemixFormProvider, useRemixForm } from 'remix-hook-form';
 import { CheckoutOrderSummary } from '.';
 import { FormError } from '../common/remix-hook-form/forms/FormError';
@@ -31,7 +31,7 @@ export interface CompleteCheckoutFormProps extends PropsWithChildren {
     event: FormEvent<HTMLFormElement>,
     methods: {
       setSubmitting: React.Dispatch<React.SetStateAction<boolean>>;
-      submit: SubmitFunction;
+      submit: (event?: FormEvent<HTMLFormElement>) => void;
     },
   ) => Promise<void>;
 }
@@ -89,6 +89,20 @@ export const CompleteCheckoutForm: FC<CompleteCheckoutFormProps> = ({
     },
   });
 
+  useEffect(() => {
+    if (completeCartFetcher.state === 'idle') {
+      setSubmitting(false);
+    }
+  }, [completeCartFetcher.state]);
+
+  useEffect(() => {
+    const payload = completeCartFetcher.data as { errors?: { root?: { message?: string } } } | undefined;
+    const rootError = payload?.errors?.root?.message;
+    if (rootError) {
+      form.setError('root', { message: rootError });
+    }
+  }, [completeCartFetcher.data, form]);
+
   const sameAsShipping = form.watch('sameAsShipping');
   const billingAddress = form.watch('billingAddress');
 
@@ -102,11 +116,13 @@ export const CompleteCheckoutForm: FC<CompleteCheckoutFormProps> = ({
     if (typeof onSubmit === 'function') {
       return await onSubmit(data, event, {
         setSubmitting,
-        submit: () => form.handleSubmit(),
+        submit: (submitEvent?: FormEvent<HTMLFormElement>) => {
+          void form.handleSubmit(submitEvent ?? event);
+        },
       });
     }
 
-    return form.handleSubmit();
+    void form.handleSubmit(event);
   };
 
   const setBillingAddress = (address: StripeAddress) => {

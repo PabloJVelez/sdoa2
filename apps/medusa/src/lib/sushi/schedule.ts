@@ -1,3 +1,5 @@
+import { DateTime } from "luxon"
+
 export type TimeWindow = {
   start: string
   end: string
@@ -33,19 +35,19 @@ export function parseScheduledAt(iso: string): Date {
 export function validateScheduledSlot(
   scheduledAtIso: string,
   allowedDays: AllowedDaySchedule[],
+  storeTimezone = "America/Chicago",
 ): { valid: true } | { valid: false; reason: string } {
-  let scheduledAt: Date
-  try {
-    scheduledAt = parseScheduledAt(scheduledAtIso)
-  } catch {
+  const scheduledAt = DateTime.fromISO(scheduledAtIso, { zone: storeTimezone })
+
+  if (!scheduledAt.isValid) {
     return { valid: false, reason: "Invalid date or time" }
   }
 
-  if (scheduledAt.getTime() <= Date.now()) {
+  if (scheduledAt.toMillis() <= Date.now()) {
     return { valid: false, reason: "Scheduled time must be in the future" }
   }
 
-  const dayName = getDayName(scheduledAt)
+  const dayName = scheduledAt.toFormat("cccc").toLowerCase()
   const daySchedule = allowedDays.find(
     (entry) => entry.day.toLowerCase() === dayName,
   )
@@ -57,9 +59,11 @@ export function validateScheduledSlot(
     }
   }
 
-  const timeValue = formatTime(scheduledAt)
+  const timeValue = scheduledAt.toFormat("HH:mm")
   const inWindow = daySchedule.windows.some((window) => {
-    return timeValue >= window.start && timeValue <= window.end
+    const start = window.start.slice(0, 5)
+    const end = window.end.slice(0, 5)
+    return timeValue >= start && timeValue <= end
   })
 
   if (!inWindow) {
@@ -70,12 +74,6 @@ export function validateScheduledSlot(
   }
 
   return { valid: true }
-}
-
-function formatTime(date: Date): string {
-  const hours = date.getHours().toString().padStart(2, "0")
-  const minutes = date.getMinutes().toString().padStart(2, "0")
-  return `${hours}:${minutes}`
 }
 
 export const DEFAULT_ALLOWED_DAYS: AllowedDaySchedule[] = [

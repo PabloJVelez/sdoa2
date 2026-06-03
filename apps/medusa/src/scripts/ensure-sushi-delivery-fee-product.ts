@@ -5,6 +5,8 @@ import {
   SUSHI_DELIVERY_FEE_SKU,
   SUSHI_ORDER_FLOW,
 } from "../lib/sushi/constants"
+import { ensureSushiDeliveryFeeVariantReady } from "../lib/sushi/ensure-delivery-fee-variant"
+import { resolvePhysicalShippingProfileId } from "../lib/sushi/shipping-profile"
 
 const PRODUCT_HANDLE = "sushi-delivery-fee"
 
@@ -27,6 +29,7 @@ export default async function ensureSushiDeliveryFeeProduct({
   })
 
   if (existing?.[0]?.id) {
+    await ensureSushiDeliveryFeeVariantReady(container)
     logger.info("[ensure-sushi-delivery-fee] Variant already exists")
     return
   }
@@ -39,15 +42,7 @@ export default async function ensureSushiDeliveryFeeProduct({
     await productModule.deleteProducts([String(existingProducts[0].id)])
   }
 
-  const { data: shippingProfiles } = await query.graph({
-    entity: "shipping_profile",
-    fields: ["id"],
-    filters: { type: "default" },
-  })
-  const defaultProfileId = shippingProfiles?.[0]?.id
-  if (typeof defaultProfileId !== "string") {
-    throw new Error("Default shipping profile not found. Run init first.")
-  }
+  const defaultProfileId = await resolvePhysicalShippingProfileId(container)
 
   const storeModule = container.resolve(Modules.STORE)
   const [store] = await storeModule.listStores()
@@ -76,6 +71,7 @@ export default async function ensureSushiDeliveryFeeProduct({
               title: "Delivery Fee",
               sku: SUSHI_DELIVERY_FEE_SKU,
               manage_inventory: false,
+              allow_backorder: true,
               options: { Fee: "Standard" },
               prices: [{ currency_code: "usd", amount: 0 }],
             },
@@ -86,4 +82,5 @@ export default async function ensureSushiDeliveryFeeProduct({
   })
 
   logger.info("[ensure-sushi-delivery-fee] Created sushi delivery fee product")
+  await ensureSushiDeliveryFeeVariantReady(container)
 }

@@ -3,12 +3,61 @@ import {
   isWithinDeliveryRadius,
   roundMiles,
 } from "../sushi/delivery-fee"
+import { computeFoodSubtotalCents, resolveOrderRequestFoodSubtotalCents } from "../sushi/cart-snapshot"
+import {
+  buildSushiPaymentCheckoutUrl,
+} from "../sushi/email-helpers"
 import {
   cartContainsEventItems,
   cartContainsSushiItems,
   isSushiProduct,
 } from "../sushi/product"
 import { validateScheduledSlot } from "../sushi/schedule"
+
+describe("sushi cart snapshot subtotal", () => {
+  it("sums line unit_price in major units and returns cents", () => {
+    expect(
+      computeFoodSubtotalCents([
+        { unit_price: 250, quantity: 2 },
+      ]),
+    ).toBe(50000)
+  })
+
+  it("excludes delivery fee lines from food subtotal", () => {
+    expect(
+      computeFoodSubtotalCents([
+        { unit_price: 250, quantity: 1 },
+        {
+          unit_price: 14.99,
+          quantity: 1,
+          variant_sku: "SUSHI-DELIVERY-FEE",
+          metadata: { kind: "sushi_delivery_fee" },
+        },
+      ]),
+    ).toBe(25000)
+  })
+})
+
+describe("resolveOrderRequestFoodSubtotalCents", () => {
+  it("prefers cart snapshot over stored subtotal_cents", () => {
+    expect(
+      resolveOrderRequestFoodSubtotalCents({
+        subtotal_cents: 5_000_000,
+        cart_snapshot: {
+          items: [{ unit_price: 250, quantity: 2 }],
+        },
+      }),
+    ).toBe(50000)
+  })
+})
+
+describe("sushi payment link", () => {
+  it("builds pay route on storefront", () => {
+    expect(buildSushiPaymentCheckoutUrl("req_abc123")).toBe(
+      "http://localhost:3000/sushi/pay/req_abc123",
+    )
+  })
+})
 
 describe("sushi delivery fee", () => {
   it("calculates fee as miles times price per mile rounded to cents", () => {

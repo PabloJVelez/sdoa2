@@ -1,12 +1,13 @@
 import { StoreCart, StoreCartLineItem, StoreProduct, StoreProductVariant } from '@medusajs/types';
 import isNumber from 'lodash/isNumber';
 import merge from 'lodash/merge';
+import { usesMedusaMajorUnits } from '@libs/util/sushi';
 
 const locale = 'en-US';
 export interface FormatPriceOptions {
   currency: Intl.NumberFormatOptions['currency'];
   quantity?: number;
-  /** Amount is in minor units (e.g. cents). Product PDP prices and cart/checkout totals use this. */
+  /** Amount is in minor units (e.g. cents). Catalog PDP prices use this; sushi/event carts use major units. */
   inCents?: boolean;
 }
 
@@ -47,30 +48,34 @@ export function getCheapestProductVariant(product: StoreProduct) {
   return sortProductVariantsByPrice(product)[0];
 }
 
-export function formatLineItemPrice(lineItem: StoreCartLineItem, regionCurrency: string) {
+export function formatLineItemPrice(
+  lineItem: StoreCartLineItem,
+  regionCurrency: string,
+  cart?: StoreCart | null,
+) {
+  const inMajorUnits = cart ? usesMedusaMajorUnits(cart) : usesMedusaMajorUnits({ items: [lineItem] });
   return formatPrice(lineItem.unit_price || 0, {
     currency: regionCurrency,
     quantity: lineItem.quantity,
-    inCents: true,
+    inCents: !inMajorUnits,
   });
 }
 
 export function formatCartSubtotal(cart: StoreCart) {
-  return formatPrice(cart.item_subtotal || 0, {
-    currency: cart.region?.currency_code,
-    inCents: true,
-  });
+  return formatCartAmount(cart.item_subtotal, cart.region?.currency_code, 1, cart);
 }
 
-/** Format cart/order monetary fields from Medusa (minor currency units). */
+/** Format cart/order monetary fields from Medusa. */
 export function formatCartAmount(
   amount: number | null | undefined,
   currency: string | undefined,
   quantity = 1,
+  cart?: Parameters<typeof usesMedusaMajorUnits>[0] | null,
 ) {
+  const inMajorUnits = cart ? usesMedusaMajorUnits(cart) : false;
   return formatPrice(amount || 0, {
     currency,
     quantity,
-    inCents: true,
+    inCents: !inMajorUnits,
   });
 }

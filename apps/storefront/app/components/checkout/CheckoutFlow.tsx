@@ -7,6 +7,7 @@ import { FC, useEffect } from 'react';
 import { CheckoutAccountDetails } from './CheckoutAccountDetails';
 import { CheckoutDeliveryMethod } from './CheckoutDeliveryMethod';
 import { CheckoutPayment } from './CheckoutPayment';
+import { CheckoutSushiFulfillmentSummary } from './CheckoutSushiFulfillmentSummary';
 import { StripeExpressCheckout } from './StripePayment/StripeExpressPayment';
 
 export const CheckoutFlow: FC = () => {
@@ -36,7 +37,9 @@ export const CheckoutFlow: FC = () => {
           </Alert>
         )}
 
-        <StripeExpressCheckout cart={cart} />
+        {!isSushiCheckout && <StripeExpressCheckout cart={cart} />}
+
+        <CheckoutSushiFulfillmentSummary cart={cart} />
 
         <CheckoutAccountDetails
           isDigitalOnly={isDigitalOnly}

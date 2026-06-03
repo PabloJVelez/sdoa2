@@ -6,8 +6,7 @@ import { medusaAddressToAddress } from '@libs/util';
 import { PaymentElement, useElements, useStripe } from '@stripe/react-stripe-js';
 import { PaymentMethodCreateParams, StripePaymentElement } from '@stripe/stripe-js';
 import clsx from 'clsx';
-import { FC, FormEvent, PropsWithChildren, useEffect, useMemo, useState } from 'react';
-import { SubmitFunction } from 'react-router';
+import { FC, FormEvent, PropsWithChildren, useState } from 'react';
 import { CompleteCheckoutForm } from '../CompleteCheckoutForm';
 
 export interface StripePaymentFormProps extends PropsWithChildren {
@@ -22,23 +21,13 @@ export const StripePaymentForm: FC<StripePaymentFormProps> = ({ isActiveStep, pa
   const stripe = useStripe();
   const elements = useElements();
   const { activePaymentSession, cart } = useCheckout();
-  const stripePaymentMethods = useMemo(
-    () => paymentMethods?.filter((pm) => pm.provider_id === 'pp_stripe-connect_stripe-connect'),
-    [paymentMethods],
+  const stripePaymentMethods = paymentMethods.filter(
+    (pm) => pm.provider_id === 'pp_stripe-connect_stripe-connect',
   );
-
-  useEffect(() => {
-    if (!elements) return;
-    elements.fetchUpdates();
-  }, [activePaymentSession?.payment?.updated_at]); // TODO: CHECK if this is correct
 
   const hasPaymentMethods = stripePaymentMethods.length > 0;
 
   const initialPaymentMethodId = hasPaymentMethods ? stripePaymentMethods[0].data?.id : 'new';
-
-  useEffect(() => {
-    if (isActiveStep && stripeElement) stripeElement.focus();
-  }, [isActiveStep, stripeElement]);
 
   if (!cart || !stripe || !elements) return null;
 
@@ -50,12 +39,12 @@ export const StripePaymentForm: FC<StripePaymentFormProps> = ({ isActiveStep, pa
       submit,
     }: {
       setSubmitting: (isSubmitting: boolean) => void;
-      submit: SubmitFunction;
+      submit: (event?: FormEvent<HTMLFormElement>) => void;
     },
   ) => {
     setStripeError(undefined);
     if (data.paymentMethodId !== 'new') {
-      submit(event.target as HTMLFormElement);
+      submit(event);
       return;
     }
     // NOTE: We default the cart billing address to be the same as the shipping address in the `ACCOUNT_DETAILS` step.
@@ -100,13 +89,18 @@ export const StripePaymentForm: FC<StripePaymentFormProps> = ({ isActiveStep, pa
           return;
         }
 
-        submit(event.target as HTMLFormElement);
+        if (
+          paymentIntent &&
+          paymentIntent.status !== 'succeeded' &&
+          paymentIntent.status !== 'requires_capture' &&
+          paymentIntent.status !== 'processing'
+        ) {
+          setStripeError(`Payment could not be completed (status: ${paymentIntent.status}).`);
+          setSubmitting(false);
+          return;
+        }
 
-        // This point will only be reached if there is an immediate error when
-        // confirming the payment. Show error to your customer (e.g., payment
-        // details incomplete)
-        // if (error) return handleError(error);
-        // if (!is_default) return handleSuccess(setupIntent);
+        submit(event);
       })
       .catch((error) => {
         setSubmitting(false);
@@ -116,6 +110,9 @@ export const StripePaymentForm: FC<StripePaymentFormProps> = ({ isActiveStep, pa
 
   const handlePaymentElementReady = (element: StripePaymentElement) => {
     setStripeElement(element);
+    if (isActiveStep) {
+      element.focus();
+    }
   };
 
   return (
@@ -133,6 +130,7 @@ export const StripePaymentForm: FC<StripePaymentFormProps> = ({ isActiveStep, pa
           })}
         >
           <PaymentElement
+            key={`${activePaymentSession?.id ?? 'session'}-${activePaymentSession?.payment?.updated_at ?? ''}`}
             onReady={handlePaymentElementReady}
             className="my-6 w-full"
             options={{

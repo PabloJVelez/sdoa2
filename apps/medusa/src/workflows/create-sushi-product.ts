@@ -15,7 +15,10 @@ import {
   resolveProductThumbnail,
   toProductImageInputs,
 } from "../lib/sushi/product-images"
+import { ensureDefaultSalesChannelStockLocationLink } from "../lib/sushi/ensure-sales-channel-stock-location"
 import { ensureSushiProductStoreReady } from "../lib/sushi/ensure-sushi-product-store"
+import { resolvePhysicalShippingProfileId } from "../lib/sushi/shipping-profile"
+import { majorUnitsFromCents } from "../lib/sushi/pricing"
 import { setVariantInventoryQuantity } from "../lib/sushi/variant-inventory"
 import "./hooks/validate-add-to-cart"
 
@@ -48,18 +51,7 @@ const createProductStep = createStep(
       )
     }
 
-    const { data: shippingProfiles } = await query.graph({
-      entity: "shipping_profile",
-      fields: ["id"],
-      filters: { type: "default" },
-    })
-    const shippingProfileId = shippingProfiles?.[0]?.id
-    if (typeof shippingProfileId !== "string") {
-      throw new MedusaError(
-        MedusaError.Types.INVALID_DATA,
-        "Default shipping profile not found. Run init first.",
-      )
-    }
+    const shippingProfileId = await resolvePhysicalShippingProfileId(container)
 
     const { data: collections } = await query.graph({
       entity: "product_collection",
@@ -127,7 +119,7 @@ const createProductStep = createStep(
                 prices: [
                   {
                     currency_code: "usd",
-                    amount: input.price_cents,
+                    amount: majorUnitsFromCents(input.price_cents),
                   },
                 ],
               },
@@ -141,6 +133,7 @@ const createProductStep = createStep(
     const variant = product.variants?.[0]
 
     if (variant?.id && variant?.sku) {
+      await ensureDefaultSalesChannelStockLocationLink(container)
       await setVariantInventoryQuantity(container, {
         variantId: variant.id,
         variantSku: variant.sku,

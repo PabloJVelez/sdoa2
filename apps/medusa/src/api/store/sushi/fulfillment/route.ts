@@ -11,6 +11,7 @@ import { z } from "zod"
 import {
   buildCartSnapshot,
   computeFoodSubtotalCents,
+  ensureSushiCartInventoryReady,
   ensureSushiCartShippingMethod,
   reserveSushiCartInventory,
   SUSHI_DELIVERY_FEE_LINE_KIND,
@@ -25,7 +26,7 @@ const schema = z.object({
   fulfillment_type: z.enum(["pickup", "delivery"]),
   scheduled_at: z.string().min(1),
   delivery_address: z.string().optional(),
-  customer_email: z.string().email().optional(),
+  customer_email: z.string().email(),
   customer_name: z.string().optional(),
   customer_phone: z.string().optional(),
 })
@@ -46,6 +47,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
   const scheduleCheck = validateScheduledSlot(
     parsed.data.scheduled_at,
     settings.allowed_days as never,
+    settings.store_timezone ?? "America/Chicago",
   )
   if (!scheduleCheck.valid) {
     return res.status(400).json({ message: scheduleCheck.reason })
@@ -112,6 +114,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     const { result: updatedCart } = await updateCartWorkflow(req.scope).run({
       input: {
         id: parsed.data.cart_id,
+        email: parsed.data.customer_email,
         metadata: {
           order_flow: SUSHI_ORDER_FLOW,
           sushi_fulfillment_type: "pickup",
@@ -126,6 +129,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
     })
 
     await ensureSushiCartShippingMethod(req.scope, parsed.data.cart_id, "pickup")
+    await ensureSushiCartInventoryReady(req.scope, parsed.data.cart_id)
 
     const { data: cartsAfter } = await query.graph({
       entity: "cart",

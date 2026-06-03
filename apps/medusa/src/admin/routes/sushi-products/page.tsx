@@ -71,7 +71,7 @@ const SushiProductsPage = () => {
     setTitle(product.title)
     setDescription(product.description ?? "")
     const amount = product.variants?.[0]?.prices?.[0]?.amount ?? 0
-    setPrice(amount > 0 ? String(amount / 100) : "0")
+    setPrice(amount > 0 ? String(amount) : "0")
     setInventory(String(product.variants?.[0]?.inventory_quantity ?? 0))
     setStatus(
       product.status === "draft" ? "draft" : "published",
@@ -114,7 +114,8 @@ const SushiProductsPage = () => {
 
     try {
       if (isEditing && editingId) {
-        await updateMutation.mutateAsync(payload)
+        const saved = await updateMutation.mutateAsync(payload)
+        loadProduct(saved)
         toast.success("Product updated", {
           description: `"${trimmedTitle}" was saved.`,
         })
@@ -229,7 +230,7 @@ const SushiProductsPage = () => {
                   <div className="min-w-0 flex-1">
                     <Text weight="plus">{product.title}</Text>
                     <Text size="small" className="text-ui-fg-subtle">
-                      {product.status} · ${(amount / 100).toFixed(2)}
+                      {product.status} · ${Number(amount).toFixed(2)}
                     </Text>
                     {product.description && (
                       <Text size="small" className="mt-2 line-clamp-2 whitespace-pre-wrap">

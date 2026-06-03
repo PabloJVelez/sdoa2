@@ -5,6 +5,7 @@ import {
 } from "@medusajs/framework/utils"
 import { updateProductsWorkflow } from "@medusajs/medusa/core-flows"
 import { SUSHI_COLLECTION_HANDLE, SUSHI_ORDER_FLOW } from "./constants"
+import { resolvePhysicalShippingProfileId } from "./shipping-profile"
 
 /**
  * Ensures a sushi bundle is published to the default sales channel, sushi collection,
@@ -63,14 +64,10 @@ export async function ensureSushiProductStoreReady(
     typeof sushiCollectionId === "string" &&
     product.collection_id !== sushiCollectionId
 
-  const { data: shippingProfiles } = await query.graph({
-    entity: "shipping_profile",
-    fields: ["id"],
-    filters: { type: "default" },
-  })
-  const defaultShippingProfileId = shippingProfiles?.[0]?.id as string | undefined
+  const defaultShippingProfileId = await resolvePhysicalShippingProfileId(
+    container as never,
+  )
   const needsShippingProfile =
-    typeof defaultShippingProfileId === "string" &&
     product.shipping_profile_id !== defaultShippingProfileId
 
   if (
@@ -94,7 +91,7 @@ export async function ensureSushiProductStoreReady(
           ...(typeof sushiCollectionId === "string"
             ? { collection_id: sushiCollectionId }
             : {}),
-          ...(needsShippingProfile && defaultShippingProfileId
+          ...(needsShippingProfile
             ? { shipping_profile_id: defaultShippingProfileId }
             : {}),
           sales_channels: [{ id: salesChannelId }],

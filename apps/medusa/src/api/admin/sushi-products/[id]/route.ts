@@ -10,7 +10,12 @@ import {
   toProductImageInputs,
 } from "../../../../lib/sushi/product-images"
 import { ensureSushiProductStoreReady } from "../../../../lib/sushi/ensure-sushi-product-store"
-import { setVariantInventoryQuantity } from "../../../../lib/sushi/variant-inventory"
+import {
+  enrichAdminSushiProductVariants,
+  setVariantInventoryQuantity,
+} from "../../../../lib/sushi/variant-inventory"
+import { adminSushiProductFields } from "../../../../lib/sushi/admin-product-fields"
+import { majorUnitsFromCents } from "../../../../lib/sushi/pricing"
 
 const updateSchema = z.object({
   title: z.string().trim().min(1).optional(),
@@ -22,24 +27,7 @@ const updateSchema = z.object({
   inventory_quantity: z.number().int().min(0).optional(),
 })
 
-const productFields = [
-  "id",
-  "title",
-  "handle",
-  "description",
-  "thumbnail",
-  "images.id",
-  "images.url",
-  "images.rank",
-  "status",
-  "metadata",
-  "variants.id",
-  "variants.sku",
-  "variants.title",
-  "variants.prices.amount",
-  "variants.prices.id",
-  "variants.inventory_quantity",
-]
+const productFields = [...adminSushiProductFields]
 
 export async function GET(req: MedusaRequest, res: MedusaResponse) {
   const query = req.scope.resolve(ContainerRegistrationKeys.QUERY)
@@ -54,7 +42,8 @@ export async function GET(req: MedusaRequest, res: MedusaResponse) {
     return res.status(404).json({ message: "Product not found" })
   }
 
-  res.status(200).json({ product })
+  const enriched = await enrichAdminSushiProductVariants(req.scope, product as never)
+  res.status(200).json({ product: enriched })
 }
 
 export async function PUT(req: MedusaRequest, res: MedusaResponse) {
@@ -119,7 +108,7 @@ export async function PUT(req: MedusaRequest, res: MedusaResponse) {
                         {
                           ...(price?.id ? { id: price.id } : {}),
                           currency_code: "usd",
-                          amount: parsed.data.price_cents,
+                          amount: majorUnitsFromCents(parsed.data.price_cents),
                         },
                       ],
                     },
@@ -152,7 +141,12 @@ export async function PUT(req: MedusaRequest, res: MedusaResponse) {
       filters: { id: req.params.id },
     })
 
-    res.status(200).json({ product: refreshed.data?.[0] })
+    const refreshedProduct = refreshed.data?.[0]
+    const enriched = refreshedProduct
+      ? await enrichAdminSushiProductVariants(req.scope, refreshedProduct as never)
+      : undefined
+
+    res.status(200).json({ product: enriched })
   } catch (error) {
     const message =
       error instanceof MedusaError

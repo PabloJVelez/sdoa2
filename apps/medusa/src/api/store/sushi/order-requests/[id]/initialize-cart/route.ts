@@ -1,5 +1,6 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { ContainerRegistrationKeys, MedusaError } from "@medusajs/framework/utils"
+import { prepareSushiPaymentCart } from "../../../../../../lib/sushi"
 import { SUSHI_DELIVERY_MODULE } from "../../../../../../modules/sushi-delivery"
 import type SushiDeliveryModuleService from "../../../../../../modules/sushi-delivery/service"
 
@@ -37,6 +38,8 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
       "Payment cart is not available for this request",
     )
   }
+
+  await prepareSushiPaymentCart(req.scope, request.payment_cart_id)
 
   const query = req.scope.resolve(ContainerRegistrationKeys.QUERY)
   const { data: carts } = await query.graph({

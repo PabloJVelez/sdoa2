@@ -1,10 +1,7 @@
 import { Breadcrumbs } from '@app/components/common/breadcrumbs';
-import { Button } from '@app/components/common/buttons/Button';
 import { Container } from '@app/components/common/container';
 import { ProductListWithPagination } from '@app/components/product/ProductListWithPagination';
-import { useCart } from '@app/hooks/useCart';
 import HomeIcon from '@heroicons/react/24/solid/HomeIcon';
-import { cartHasSushiFoodItems } from '@libs/util/sushi';
 import { fetchSushiProducts } from '@libs/util/server/sushi-products.server';
 import type { LoaderFunctionArgs, MetaFunction } from 'react-router';
 import { Link, useLoaderData } from 'react-router';
@@ -23,8 +20,6 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
 export default function SushiIndexRoute() {
   const { products, count, limit, offset } = useLoaderData<typeof loader>();
-  const { cart } = useCart();
-  const hasSushiInCart = cartHasSushiFoodItems(cart ?? null);
 
   const breadcrumbs = [
     {
@@ -49,13 +44,6 @@ export default function SushiIndexRoute() {
             Each bundle is one chef-curated selection—pickup or delivery with scheduled date and time before
             checkout.
           </p>
-          {hasSushiInCart && (
-            <div className="mt-4">
-              <Button variant="primary" as={(buttonProps) => <Link to="/sushi/checkout" {...buttonProps} />}>
-                Continue to sushi checkout
-              </Button>
-            </div>
-          )}
         </div>
       </div>
 

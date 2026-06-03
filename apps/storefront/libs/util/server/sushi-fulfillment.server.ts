@@ -3,14 +3,24 @@ import { baseMedusaConfig } from '@libs/util/server/client.server';
 import { config } from '@libs/util/server/config.server';
 import { z } from 'zod';
 
-const schema = z.object({
-  fulfillment_type: z.enum(['pickup', 'delivery']),
-  scheduled_at: z.string().min(1),
-  delivery_address: z.string().optional(),
-  customer_email: z.string().email().optional(),
-  customer_name: z.string().optional(),
-  customer_phone: z.string().optional(),
-});
+const schema = z
+  .object({
+    fulfillment_type: z.enum(['pickup', 'delivery']),
+    scheduled_at: z.string().min(1),
+    delivery_address: z.string().optional(),
+    customer_email: z.string().email(),
+    customer_name: z.string().optional(),
+    customer_phone: z.string().optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.fulfillment_type === 'delivery' && !data.delivery_address?.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Delivery address is required',
+        path: ['delivery_address'],
+      });
+    }
+  });
 
 export type SushiFulfillmentResult =
   | { ok: false; status: number; error: string }

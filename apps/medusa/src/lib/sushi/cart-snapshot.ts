@@ -87,10 +87,11 @@ export function computeFoodSubtotalCents(
     const sku = item.variant_sku ?? item.sku ?? ""
     if (sku === SUSHI_DELIVERY_FEE_SKU) continue
 
-    const price = typeof item.unit_price === "number" ? item.unit_price : 0
+    const priceMajor =
+      typeof item.unit_price === "number" ? item.unit_price : 0
     const qty =
       typeof item.quantity === "number" && item.quantity > 0 ? item.quantity : 1
-    total += Math.round(price * qty * 100)
+    total += Math.round(priceMajor * 100 * qty)
   }
 
   return total
@@ -131,4 +132,15 @@ export function getCartSnapshotSubtotalCents(
       ? (snapshot as CartSnapshot)
       : parseCartSnapshot(snapshot)
   return computeFoodSubtotalCents(parsed.items)
+}
+
+export function resolveOrderRequestFoodSubtotalCents(request: {
+  subtotal_cents?: number | null
+  cart_snapshot?: unknown
+}): number {
+  const fromSnapshot = getCartSnapshotSubtotalCents(
+    parseCartSnapshot(request.cart_snapshot),
+  )
+  if (fromSnapshot > 0) return fromSnapshot
+  return request.subtotal_cents ?? 0
 }

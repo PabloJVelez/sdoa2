@@ -9,6 +9,7 @@ import {
   resolveChefBrandContact,
   splitCustomerName,
 } from "../lib/sushi/email-helpers"
+import { resolveOrderRequestFoodSubtotalCents } from "../lib/sushi/cart-snapshot"
 import { SUSHI_DELIVERY_MODULE } from "../modules/sushi-delivery"
 import type SushiDeliveryModuleService from "../modules/sushi-delivery/service"
 
@@ -42,7 +43,7 @@ export default async function sushiOrderRequestConfirmedHandler({
     request.customer_name,
     request.customer_email,
   )
-  const foodSubtotal = request.subtotal_cents ?? 0
+  const foodSubtotal = resolveOrderRequestFoodSubtotalCents(request)
   const deliveryFee = request.delivery_fee_cents ?? 0
 
   await notificationService.createNotifications({

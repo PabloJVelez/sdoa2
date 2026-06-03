@@ -3,7 +3,7 @@ import { Image } from '@app/components/common/images/Image';
 import { useCheckout } from '@app/hooks/useCheckout';
 import { useRemoveCartItem } from '@app/hooks/useRemoveCartItem';
 import { formatPrice } from '@libs/util/prices';
-import { isSushiDeliveryFeeLine } from '@libs/util/sushi';
+import { isSushiDeliveryFeeLine, usesMedusaMajorUnits } from '@libs/util/sushi';
 import { StoreCart, StoreCartLineItem } from '@medusajs/types';
 import { FC } from 'react';
 import { Link } from 'react-router';
@@ -80,7 +80,7 @@ export const CheckoutOrderSummaryItem: FC<CheckoutOrderSummaryItemProps> = ({ it
             <span className="font-bold text-gray-900">
               {formatPrice((item.unit_price || 0), {
                 currency: cart.region?.currency_code,
-                inCents: true,
+                inCents: !usesMedusaMajorUnits(cart),
               })}
             </span>
           </p>
