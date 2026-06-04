@@ -338,7 +338,6 @@ export const getProductMeta: MetaFunction = ({ data, matches }) => {
       property: 'product:price:amount',
       content: formatPrice(getVariantFinalPrice(defaultVariant), {
         currency: region.currency_code,
-        inCents: true,
       }),
     },
   ];

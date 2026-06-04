@@ -39,10 +39,8 @@ type GraphSushiProduct = {
 };
 
 function mapVariantToStore(variant: GraphSushiVariant): StoreProductVariant {
-  const amountMajor = variant.prices?.[0]?.amount ?? 0;
+  const amount = variant.prices?.[0]?.amount ?? 0;
   const currency_code = variant.prices?.[0]?.currency_code ?? 'usd';
-  // Storefront product components expect calculated amounts in cents (inCents: true).
-  const amountCents = Math.round(amountMajor * 100);
 
   return {
     id: variant.id,
@@ -55,8 +53,8 @@ function mapVariantToStore(variant: GraphSushiVariant): StoreProductVariant {
       value: option.value,
     })),
     calculated_price: {
-      calculated_amount: amountCents,
-      original_amount: amountCents,
+      calculated_amount: amount,
+      original_amount: amount,
       currency_code,
     },
   } as unknown as StoreProductVariant;

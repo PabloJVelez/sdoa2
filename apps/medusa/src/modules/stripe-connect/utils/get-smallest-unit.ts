@@ -1,5 +1,3 @@
-import { BigNumber } from '@medusajs/framework/utils';
-
 /**
  * Converts a decimal amount to Stripe's smallest currency unit.
  * - Zero-decimal currencies (e.g. JPY, KRW): amount as-is.
@@ -37,43 +35,6 @@ export function getSmallestUnit(amount: number, currencyCode: string): number {
   }
   // Default: two decimal (cents)
   return Math.round(amount * 100);
-}
-
-/** Resolve Medusa BigNumberInput / numeric payment amounts. */
-export function resolveMajorAmount(amount: unknown): number {
-  if (amount == null) {
-    return 0;
-  }
-
-  if (typeof amount === 'object' && amount !== null && 'numeric' in amount) {
-    const numeric = Number((amount as { numeric: unknown }).numeric);
-    if (Number.isFinite(numeric)) {
-      return numeric;
-    }
-  }
-
-  try {
-    return new BigNumber(amount as never).numeric;
-  } catch {
-    const parsed = Number(amount);
-    return Number.isFinite(parsed) ? parsed : 0;
-  }
-}
-
-/**
- * Stripe PaymentIntent amount in smallest currency units.
- *
- * Medusa cart/order totals use major currency units (same as chef event flow).
- */
-export function resolveStripeAmountInCents(
-  amount: unknown,
-  currencyCode: string,
-): number {
-  const major = resolveMajorAmount(amount);
-  if (!Number.isFinite(major)) {
-    return 0;
-  }
-  return getSmallestUnit(major, currencyCode);
 }
 
 /** Display Stripe / Medusa smallest-unit amounts (e.g. admin widgets). */

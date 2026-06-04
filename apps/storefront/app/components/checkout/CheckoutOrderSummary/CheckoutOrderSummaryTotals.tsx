@@ -15,7 +15,6 @@ export interface CheckoutOrderSummaryTotalsItemProps extends HTMLAttributes<HTML
   label: string;
   amount?: number | null;
   region: StoreRegion;
-  cart: StoreCart;
 }
 
 const CheckoutOrderSummaryTotalsItem: FC<CheckoutOrderSummaryTotalsItemProps> = ({
@@ -23,13 +22,12 @@ const CheckoutOrderSummaryTotalsItem: FC<CheckoutOrderSummaryTotalsItemProps> = 
   amount,
   className,
   region,
-  cart,
 }) => {
   return (
     <div className={clsx('flex items-center justify-between text-sm', className)}>
       <dt>{label}</dt>
       <dd className="font-bold text-gray-900">
-        {formatCartAmount(amount, region?.currency_code, 1, cart)}
+        {formatCartAmount(amount, region?.currency_code)}
       </dd>
     </div>
   );
@@ -50,23 +48,22 @@ export const CheckoutOrderSummaryTotals: FC<CheckoutOrderSummaryTotalsProps> = (
       <CheckoutOrderSummaryDiscountCode cart={cart} />
 
       <dl className="flex flex-col gap-2">
-        <CheckoutOrderSummaryTotalsItem label="Subtotal" amount={cart.item_subtotal} region={cart.region!} cart={cart} />
+        <CheckoutOrderSummaryTotalsItem label="Subtotal" amount={cart.item_subtotal} region={cart.region!} />
         {discountTotal > 0 && (
-          <CheckoutOrderSummaryTotalsItem label="Discount" amount={-discountTotal} region={cart.region!} cart={cart} />
+          <CheckoutOrderSummaryTotalsItem label="Discount" amount={-discountTotal} region={cart.region!} />
         )}
         {!isDigitalOnly && hasShippingMethod && (
-          <CheckoutOrderSummaryTotalsItem label="Shipping" amount={shippingAmount} region={cart.region!} cart={cart} />
+          <CheckoutOrderSummaryTotalsItem label="Shipping" amount={shippingAmount} region={cart.region!} />
         )}
         {!isDigitalOnly && !hasShippingMethod && (
-          <CheckoutOrderSummaryTotalsItem label="Estimated Shipping" amount={estimatedShipping} region={cart.region!} cart={cart} />
+          <CheckoutOrderSummaryTotalsItem label="Estimated Shipping" amount={estimatedShipping} region={cart.region!} />
         )}
-        <CheckoutOrderSummaryTotalsItem label="Taxes" amount={cart.tax_total} region={cart.region!} cart={cart} />
+        <CheckoutOrderSummaryTotalsItem label="Taxes" amount={cart.tax_total} region={cart.region!} />
         <CheckoutOrderSummaryTotalsItem
           label="Total"
           amount={total}
           className="border-t border-gray-200 pt-6 !text-xl"
           region={cart.region!}
-          cart={cart}
         />
       </dl>
     </div>

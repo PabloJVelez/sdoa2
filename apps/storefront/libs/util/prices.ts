@@ -1,13 +1,12 @@
 import { StoreCart, StoreCartLineItem, StoreProduct, StoreProductVariant } from '@medusajs/types';
 import isNumber from 'lodash/isNumber';
 import merge from 'lodash/merge';
-import { usesMedusaMajorUnits } from '@libs/util/sushi';
 
 const locale = 'en-US';
 export interface FormatPriceOptions {
   currency: Intl.NumberFormatOptions['currency'];
   quantity?: number;
-  /** Amount is in minor units (e.g. cents). Catalog PDP prices use this; sushi/event carts use major units. */
+  /** Pass true only when the amount is in minor units (e.g. API fields named *Cents). Medusa cart/order amounts use major units. */
   inCents?: boolean;
 }
 
@@ -48,34 +47,27 @@ export function getCheapestProductVariant(product: StoreProduct) {
   return sortProductVariantsByPrice(product)[0];
 }
 
-export function formatLineItemPrice(
-  lineItem: StoreCartLineItem,
-  regionCurrency: string,
-  cart?: StoreCart | null,
-) {
-  const inMajorUnits = cart ? usesMedusaMajorUnits(cart) : usesMedusaMajorUnits({ items: [lineItem] });
+export function formatLineItemPrice(lineItem: StoreCartLineItem, regionCurrency: string) {
   return formatPrice(lineItem.unit_price || 0, {
     currency: regionCurrency,
     quantity: lineItem.quantity,
-    inCents: !inMajorUnits,
   });
 }
 
 export function formatCartSubtotal(cart: StoreCart) {
-  return formatCartAmount(cart.item_subtotal, cart.region?.currency_code, 1, cart);
+  return formatPrice(cart.item_subtotal || 0, {
+    currency: cart.region?.currency_code,
+  });
 }
 
-/** Format cart/order monetary fields from Medusa. */
+/** Format cart/order monetary fields from Medusa (major currency units). */
 export function formatCartAmount(
   amount: number | null | undefined,
   currency: string | undefined,
   quantity = 1,
-  cart?: Parameters<typeof usesMedusaMajorUnits>[0] | null,
 ) {
-  const inMajorUnits = cart ? usesMedusaMajorUnits(cart) : false;
   return formatPrice(amount || 0, {
     currency,
     quantity,
-    inCents: !inMajorUnits,
   });
 }

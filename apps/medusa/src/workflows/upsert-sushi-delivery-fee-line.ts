@@ -11,8 +11,8 @@ import {
 } from "@medusajs/workflows-sdk"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 import { SUSHI_DELIVERY_FEE_LINE_KIND } from "../lib/sushi/constants"
-import { majorUnitsFromCents } from "../lib/sushi/pricing"
 import { getSushiDeliveryFeeVariantId } from "../lib/sushi/delivery-fee-variant"
+import { majorUnitsFromCents } from "../lib/sushi/pricing"
 
 type UpsertInput = {
   cart_id: string

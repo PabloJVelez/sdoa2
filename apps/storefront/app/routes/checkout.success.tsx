@@ -3,7 +3,6 @@ import { Container } from '@app/components/common/container/Container';
 import { Image } from '@app/components/common/images/Image';
 import { formatPhoneNumber } from '@libs/util/phoneNumber';
 import { formatPrice } from '@libs/util/prices';
-import { usesMedusaMajorUnits } from '@libs/util/sushi';
 import { retrieveOrder } from '@libs/util/server/data/orders.server';
 import { StoreOrder, StorePaymentCollection } from '@medusajs/types';
 import { LoaderFunctionArgs, redirect } from 'react-router';
@@ -26,7 +25,6 @@ export const loader = async ({ request }: LoaderFunctionArgs): Promise<{ order: 
 export default function CheckoutSuccessRoute() {
   const { order } = useLoaderData<typeof loader>();
   const discountTotal = order.discount_total || 0;
-  const inMajorUnits = usesMedusaMajorUnits(order);
 
   const {
     shipping_address: shippingAddress,
@@ -96,7 +94,6 @@ export default function CheckoutSuccessRoute() {
                     <p className="flex-none font-bold text-gray-900">
                       {formatPrice((item.unit_price || 0), {
                         currency: order.currency_code,
-                        inCents: !inMajorUnits,
                       })}
                     </p>
                   </li>
@@ -110,7 +107,6 @@ export default function CheckoutSuccessRoute() {
                 <dd className="text-gray-900">
                   {formatPrice((order.item_subtotal || 0), {
                     currency: order.currency_code,
-                    inCents: !inMajorUnits,
                   })}
                 </dd>
               </div>
@@ -121,7 +117,6 @@ export default function CheckoutSuccessRoute() {
                   <dd className="text-gray-900">
                     {formatPrice(-discountTotal, {
                       currency: order.currency_code,
-                      inCents: !inMajorUnits,
                     })}
                   </dd>
                 </div>
@@ -134,7 +129,6 @@ export default function CheckoutSuccessRoute() {
                   <dd className="text-gray-900">
                     {formatPrice((order.shipping_total || 0), {
                       currency: order.currency_code,
-                      inCents: !inMajorUnits,
                     })}
                   </dd>
                 </div>
@@ -145,7 +139,6 @@ export default function CheckoutSuccessRoute() {
                 <dd className="text-gray-900">
                   {formatPrice((order.total || 0), {
                     currency: order.currency_code,
-                    inCents: !inMajorUnits,
                   })}
                 </dd>
               </div>

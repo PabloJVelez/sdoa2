@@ -28,7 +28,7 @@ describe("sushi cart snapshot subtotal", () => {
       computeFoodSubtotalCents([
         { unit_price: 250, quantity: 1 },
         {
-          unit_price: 14.99,
+          unit_price: 19.99,
           quantity: 1,
           variant_sku: "SUSHI-DELIVERY-FEE",
           metadata: { kind: "sushi_delivery_fee" },

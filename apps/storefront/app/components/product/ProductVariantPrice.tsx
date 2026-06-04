@@ -17,13 +17,11 @@ export const ProductVariantPrice: FC<ProductVariantPriceProps> = ({ variant, cur
     <>
       {hasSale ? (
         <span className="inline-flex items-center gap-1">
-          <span>{formatPrice(calculated, { currency: currencyCode, inCents: true })}</span>
-          <s className="text-gray-400">
-            {formatPrice(original || 0, { currency: currencyCode, inCents: true })}
-          </s>
+          <span>{formatPrice(calculated, { currency: currencyCode })}</span>
+          <s className="text-gray-400">{formatPrice(original || 0, { currency: currencyCode })}</s>
         </span>
       ) : (
-        formatPrice(original || 0, { currency: currencyCode, inCents: true })
+        formatPrice(original || 0, { currency: currencyCode })
       )}
     </>
   );

@@ -18,8 +18,8 @@ import {
 import { ensureDefaultSalesChannelStockLocationLink } from "../lib/sushi/ensure-sales-channel-stock-location"
 import { ensureSushiProductStoreReady } from "../lib/sushi/ensure-sushi-product-store"
 import { resolvePhysicalShippingProfileId } from "../lib/sushi/shipping-profile"
-import { majorUnitsFromCents } from "../lib/sushi/pricing"
 import { setVariantInventoryQuantity } from "../lib/sushi/variant-inventory"
+import { majorUnitsFromCents } from "../lib/sushi/pricing"
 import "./hooks/validate-add-to-cart"
 
 export type CreateSushiProductInput = {

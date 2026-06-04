@@ -88,28 +88,6 @@ function lineItemIsChefEvent(item: {
   return typeof sku === 'string' && sku.startsWith('EVENT-');
 }
 
-/** Chef event and sushi carts store Medusa amounts in major currency units. */
-export function usesMedusaMajorUnits(
-  cartOrOrder: {
-    metadata?: Record<string, unknown> | null;
-    items?: Array<{
-      metadata?: Record<string, unknown> | null;
-      variant_sku?: string | null;
-    }> | null;
-  } | null,
-): boolean {
-  if (!cartOrOrder) return false;
-
-  const metadata = (cartOrOrder.metadata ?? {}) as Record<string, unknown>;
-  if (metadata.order_flow === SUSHI_ORDER_FLOW) return true;
-
-  if (cartOrOrder.items?.some((item) => lineItemIsChefEvent(item) || lineItemIsSushiFood(item as never))) {
-    return true;
-  }
-
-  return false;
-}
-
 export function isSushiCart(cart: StoreCart | null): boolean {
   return cartContainsSushiItems(cart);
 }
