@@ -29,6 +29,9 @@ enum Templates {
   CHEF_EVENT_REJECTED = "chef-event-rejected",
   EVENT_DETAILS_RESEND = "event-details-resend",
   RECEIPT = "receipt",
+  SUSHI_ORDER_REQUEST_CREATED = "sushi-order-request-created",
+  SUSHI_ORDER_REQUEST_CONFIRMED = "sushi-order-request-confirmed",
+  SUSHI_ORDER_REQUEST_REJECTED = "sushi-order-request-rejected",
 }
 
 // Import email templates
@@ -38,6 +41,9 @@ import { chefEventAcceptedEmail } from "./emails/chef-event-accepted"
 import { chefEventRejectedEmail } from "./emails/chef-event-rejected"
 import { eventDetailsResendEmail } from "./emails/event-details-resend"
 import { receiptEmail } from "./emails/receipt"
+import { sushiOrderRequestCreatedEmail } from "./emails/sushi-order-request-created"
+import { sushiOrderRequestConfirmedEmail } from "./emails/sushi-order-request-confirmed"
+import { sushiOrderRequestRejectedEmail } from "./emails/sushi-order-request-rejected"
 
 const templates: {[key in Templates]?: (props: any) => React.ReactNode} = {
   [Templates.ORDER_PLACED]: orderPlacedEmail,
@@ -46,6 +52,9 @@ const templates: {[key in Templates]?: (props: any) => React.ReactNode} = {
   [Templates.CHEF_EVENT_REJECTED]: chefEventRejectedEmail,
   [Templates.EVENT_DETAILS_RESEND]: eventDetailsResendEmail,
   [Templates.RECEIPT]: receiptEmail,
+  [Templates.SUSHI_ORDER_REQUEST_CREATED]: sushiOrderRequestCreatedEmail,
+  [Templates.SUSHI_ORDER_REQUEST_CONFIRMED]: sushiOrderRequestConfirmedEmail,
+  [Templates.SUSHI_ORDER_REQUEST_REJECTED]: sushiOrderRequestRejectedEmail,
 }
 
 class ResendNotificationProviderService extends AbstractNotificationProviderService {
@@ -109,6 +118,12 @@ class ResendNotificationProviderService extends AbstractNotificationProviderServ
         return "📧 Event Details Reminder"
       case Templates.RECEIPT:
         return "Your event receipt"
+      case Templates.SUSHI_ORDER_REQUEST_CREATED:
+        return "Sushi delivery request received"
+      case Templates.SUSHI_ORDER_REQUEST_CONFIRMED:
+        return "Sushi order confirmed — complete payment"
+      case Templates.SUSHI_ORDER_REQUEST_REJECTED:
+        return "Sushi delivery request update"
       default:
         return "New Email"
     }

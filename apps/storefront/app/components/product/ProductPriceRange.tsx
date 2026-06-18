@@ -24,7 +24,11 @@ export const ProductPriceRange: FC<ProductPriceRangeProps> = ({ product, currenc
       {hasPriceRange ? (
         <>
           {formatPrice(minPrice, { currency: currencyCode })}
-          {maxPrice && maxPrice > minPrice ? <>&ndash;{formatPrice(maxPrice, { currency: currencyCode })}</> : ''}
+          {maxPrice && maxPrice > minPrice ? (
+            <>&ndash;{formatPrice(maxPrice, { currency: currencyCode })}</>
+          ) : (
+            ''
+          )}
         </>
       ) : (
         <ProductVariantPrice variant={minVariant} currencyCode={currencyCode} />

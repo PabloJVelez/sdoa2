@@ -1,0 +1,52 @@
+---
+description: Prefer loaders, actions, and derived values over React client hooks in the storefront
+globs: apps/storefront/**/*.{tsx,ts}
+alwaysApply: false
+---
+
+# Minimal React Client State
+
+Avoid `useEffect`, `useMemo`, and `useState` unless they are truly required for browser-only or third-party integration behavior.
+
+## Prefer instead
+
+- **Route loaders and actions** for data fetching and mutations (React Router v7)
+- **Fetcher state** (`useFetcher`, `useNavigation`) for form submission status
+- **Derived values** computed inline during render
+- **URL/search params** for shareable UI state
+- **Server cookies/session** for cart and checkout context
+
+## When hooks are acceptable
+
+- Third-party SDK callbacks (Stripe Elements, maps) that need local error/UI feedback
+- Headless UI controlled components that require explicit open/close wiring
+- Subscribing to external stores (Zustand) when no server equivalent exists
+
+## Examples
+
+```tsx
+// ❌ BAD — sync effect to mirror props/store into local state
+const [isOpen, setIsOpen] = useState(false);
+useEffect(() => setIsOpen(cartOpen), [cartOpen]);
+
+// ✅ GOOD — derive visibility from store + route
+const onCheckout = pathname.startsWith('/checkout');
+const dialogOpen = cartOpen && !onCheckout;
+```
+
+```tsx
+// ❌ BAD — useMemo for a cheap filter
+const items = useMemo(() => list.filter(isActive), [list]);
+
+// ✅ GOOD
+const items = list.filter(isActive);
+```
+
+```tsx
+// ❌ BAD — useEffect to fetch data already available from a loader
+useEffect(() => { fetchProduct(id).then(setProduct); }, [id]);
+
+// ✅ GOOD — useLoaderData() in the route component
+```
+
+Before adding a hook, ask: can this be a loader, action, fetcher, or inline derivation?

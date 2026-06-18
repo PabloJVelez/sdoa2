@@ -1,0 +1,67 @@
+---
+description: Forbid `any` in TypeScript. Prefer precise types, narrow generics, or unknown.
+globs: **/*.{ts,tsx}
+alwaysApply: true
+---
+
+# No `any` Type
+
+Do not use `any` in this codebase — not as an explicit annotation, return type, generic argument, or cast. `any` disables type checking on every value that flows through it and silently propagates type errors elsewhere. If you reach for `any`, choose a real alternative below.
+
+## Preferred alternatives, in order
+
+1. **Use the correct existing type.** Most of the time the right type already exists in `@medusajs/types`, `@medusajs/framework/types`, our SDK DTOs (`apps/medusa/src/sdk/**`), or a sibling file. Read the source instead of guessing.
+2. **Use `unknown` + a type guard / narrowing** when the value is genuinely untyped (parsed JSON, third-party untyped library, error in a `catch`).
+3. **Use a generic** so the caller picks the type instead of erasing it.
+4. **Define an inline / local interface** to describe just the shape you use (especially for `query.graph` results).
+5. **Use `Record<string, unknown>` / `object`** if you truly only need "some object".
+6. **As an absolute last resort**: cast through `unknown` with a narrow shape (`value as unknown as { id: string }`), and add a `// TODO` explaining why a precise type isn't possible. Never `as any`.
+
+## Examples
+
+```typescript
+// ❌ BAD — disables type-checking on the result entirely
+const { data: variants } = await query.graph({
+  entity: 'product_variant',
+  fields: ['id', 'sku'],
+  filters: { sku: SKU } as any,
+})
+
+// ✅ GOOD — describe the shape you use and cast the response (not the input)
+type VariantRow = { id?: string; sku?: string | null; product_id?: string }
+const { data: variants } = (await query.graph({
+  entity: 'product_variant',
+  fields: ['id', 'sku', 'product_id'],
+  filters: { sku: SKU },
+})) as { data?: VariantRow[] }
+```
+
+```typescript
+// ❌ BAD
+function handle(err: any) {
+  console.error(err.message)
+}
+
+// ✅ GOOD — `unknown` forces narrowing
+function handle(err: unknown) {
+  if (err instanceof Error) console.error(err.message)
+  else console.error(String(err))
+}
+```
+
+```typescript
+// ❌ BAD — generic erased to any
+function pick(obj: any, key: string) { return obj[key] }
+
+// ✅ GOOD — preserves the input/output relationship
+function pick<T, K extends keyof T>(obj: T, key: K): T[K] { return obj[key] }
+```
+
+## When fixing build errors
+
+When tempted to add `as any` to silence a TS error: stop, find the real type (look at the function signature, the model definition, or imported DTO), and fix the shape. A 30-second look at the source nearly always reveals the precise type. `as any` shifts the bug to runtime.
+
+## Exceptions
+
+- Generated code (e.g. `node_modules`, build artifacts) is not subject to this rule.
+- Third-party `.d.ts` files we can't edit. In wrappers around them, narrow to a precise type at the boundary.

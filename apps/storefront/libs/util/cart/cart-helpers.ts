@@ -1,3 +1,4 @@
+import { cartContainsSushiItems, isSushiDeliveryFeeLine, isSushiFoodSku, getLineItemSku } from '@libs/util/sushi';
 import { StoreCart, StoreCartShippingOption } from '@medusajs/types';
 
 /**
@@ -15,18 +16,49 @@ export function isDigitalShippingOption(option: StoreCartShippingOption): boolea
  */
 export function hasOnlyDigitalItems(cart: StoreCart | null): boolean {
   if (!cart || !cart.items?.length) return false;
+  if (cartContainsSushiItems(cart)) return false;
 
   return cart.items.every((item) => {
     const lineItem = item as unknown as Record<string, unknown>;
+    if (isSushiDeliveryFeeLine(lineItem as never)) return false;
     if (lineItem.requires_shipping === false) return true;
     const metadata =
       typeof lineItem.metadata === "object" && lineItem.metadata !== null
         ? (lineItem.metadata as Record<string, unknown>)
         : null;
+    if (metadata?.order_flow === 'sushi') return false;
     if (metadata?.kind === "chef_event_additional_charge") return true;
-    const sku = lineItem.variant_sku;
+    const sku = getLineItemSku(lineItem as never);
+    if (isSushiFoodSku(sku)) return false;
     return typeof sku === 'string' && sku.startsWith('EVENT-');
   });
+}
+
+export function isSushiPickupShippingOption(option: StoreCartShippingOption): boolean {
+  return option.name.toLowerCase().includes('sushi pickup');
+}
+
+export function isSushiDeliveryShippingOption(option: StoreCartShippingOption): boolean {
+  return option.name.toLowerCase().includes('sushi delivery');
+}
+
+export function filterShippingOptionsForSushiCart(
+  cart: StoreCart | null,
+  shippingOptions: StoreCartShippingOption[],
+): StoreCartShippingOption[] {
+  if (!cartContainsSushiItems(cart)) return shippingOptions;
+
+  const metadata = (cart?.metadata ?? {}) as Record<string, unknown>;
+  const fulfillmentType = metadata.sushi_fulfillment_type;
+
+  const sushiOptions = shippingOptions.filter((option) => {
+    if (fulfillmentType === 'delivery') {
+      return isSushiDeliveryShippingOption(option);
+    }
+    return isSushiPickupShippingOption(option);
+  });
+
+  return sushiOptions.length > 0 ? sushiOptions : shippingOptions;
 }
 
 /**
@@ -66,6 +98,10 @@ export function filterShippingOptionsForCart(
   cart: StoreCart | null,
   shippingOptions: StoreCartShippingOption[],
 ): StoreCartShippingOption[] {
+  if (cartContainsSushiItems(cart)) {
+    return filterShippingOptionsForSushiCart(cart, shippingOptions);
+  }
+
   if (!hasOnlyDigitalItems(cart)) return shippingOptions;
 
   const digitalOptions = shippingOptions.filter(isDigitalShippingOption);

@@ -4,13 +4,22 @@ import { Empty } from '@app/components/common/Empty/Empty';
 import { Button } from '@app/components/common/buttons/Button';
 import { CheckoutProvider } from '@app/providers/checkout-provider';
 import ShoppingCartIcon from '@heroicons/react/24/outline/ShoppingCartIcon';
-import { filterShippingOptionsForCart, hasOnlyDigitalItems, isDigitalShippingOption } from '@libs/util/cart/cart-helpers';
-import { sdk } from '@libs/util/server/client.server';
+import {
+  filterShippingOptionsForCart,
+  hasOnlyDigitalItems,
+  isDigitalShippingOption,
+  isSushiDeliveryShippingOption,
+  isSushiPickupShippingOption,
+} from '@libs/util/cart/cart-helpers';
+import { cartContainsSushiItems, cartHasSushiFoodItems } from '@libs/util/sushi';
+import { sdk, baseMedusaConfig } from '@libs/util/server/client.server';
+import { config } from '@libs/util/server/config.server';
 import { getCartId, removeCartId } from '@libs/util/server/cookies.server';
 import { initiatePaymentSession, retrieveCart, setShippingMethod } from '@libs/util/server/data/cart.server';
 import { listCartPaymentProviders } from '@libs/util/server/data/payment.server';
 import {
   STRIPE_CONNECT_PROVIDER_ID,
+  hasValidStripeConnectPaymentSession,
   isStaleStripeConnectPaymentSession,
 } from '@libs/util/stripe/stripe-connect-session';
 import { CartDTO, StoreCart, StoreCartShippingOption, StorePaymentProvider } from '@medusajs/types';
@@ -40,9 +49,45 @@ const findCheapestShippingOption = (shippingOptions: StoreCartShippingOption[]) 
   }, shippingOptions[0]);
 };
 
+const prepareSushiCheckout = async (cartId: string, refreshPaymentSessions: boolean) => {
+  try {
+    await fetch(`${baseMedusaConfig.baseUrl}/store/sushi/carts/${cartId}/prepare-checkout`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(config.MEDUSA_PUBLISHABLE_KEY
+          ? { 'x-publishable-api-key': config.MEDUSA_PUBLISHABLE_KEY }
+          : {}),
+      },
+      body: JSON.stringify({ refresh_payment_sessions: refreshPaymentSessions }),
+    });
+  } catch (e) {
+    console.error('Failed to prepare sushi checkout', e);
+  }
+};
+
 const ensureSelectedCartShippingMethod = async (request: Request, cart: StoreCart) => {
   const shippingOptions = await fetchShippingOptions(cart.id);
   if (shippingOptions.length === 0) return;
+
+  if (cartContainsSushiItems(cart)) {
+    const metadata = (cart.metadata ?? {}) as Record<string, unknown>;
+    const fulfillmentType = metadata.sushi_fulfillment_type;
+    const sushiOption = shippingOptions.find((option) => {
+      if (fulfillmentType === 'delivery') {
+        return isSushiDeliveryShippingOption(option);
+      }
+      return isSushiPickupShippingOption(option);
+    });
+
+    if (sushiOption) {
+      const currentMethod = cart.shipping_methods?.[0];
+      if (!currentMethod || currentMethod.shipping_option_id !== sushiOption.id) {
+        await setShippingMethod(request, { cartId: cart.id, shippingOptionId: sushiOption.id });
+      }
+    }
+    return;
+  }
 
   // For digital-only carts, always ensure the digital delivery option is selected
   if (hasOnlyDigitalItems(cart)) {
@@ -120,7 +165,7 @@ export const loader = async ({
     };
   }
 
-  const cart = await retrieveCart(request).catch((e) => null);
+  let cart = await retrieveCart(request).catch(() => null);
 
   if (!cart) {
     throw redirect('/');
@@ -133,21 +178,37 @@ export const loader = async ({
     throw redirect(`/`, { headers });
   }
 
+  if (cartHasSushiFoodItems(cart)) {
+    const metadata = (cart.metadata ?? {}) as Record<string, unknown>;
+    if (!metadata.sushi_fulfillment_type) {
+      throw redirect('/sushi/checkout');
+    }
+    await prepareSushiCheckout(
+      cart.id,
+      !hasValidStripeConnectPaymentSession(cart),
+    );
+    cart = (await retrieveCart(request)) ?? cart;
+  }
+
   await ensureSelectedCartShippingMethod(request, cart);
+  cart = (await retrieveCart(request)) ?? cart;
 
   const [shippingOptions, paymentProviders, activePaymentSession] = await Promise.all([
-    await fetchShippingOptions(cartId),
+    fetchShippingOptions(cartId),
     (await listCartPaymentProviders(cart.region_id!)) as StorePaymentProvider[],
-    await ensureCartPaymentSessions(request, cart),
+    ensureCartPaymentSessions(request, cart),
   ]);
 
-  const updatedCart = await retrieveCart(request);
+  const updatedCart = (await retrieveCart(request)) ?? cart;
+  const resolvedPaymentSession =
+    updatedCart.payment_collection?.payment_sessions?.find((session) => session.status === 'pending') ??
+    activePaymentSession;
 
   return {
     cart: updatedCart,
     shippingOptions: filterShippingOptionsForCart(updatedCart, shippingOptions),
     paymentProviders: paymentProviders,
-    activePaymentSession: activePaymentSession as BasePaymentSession,
+    activePaymentSession: resolvedPaymentSession as BasePaymentSession,
   };
 };
 

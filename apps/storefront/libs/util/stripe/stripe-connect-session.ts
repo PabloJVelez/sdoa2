@@ -27,3 +27,18 @@ export function isStaleStripeConnectPaymentSession(session: PaymentSessionLike |
 
   return hasClientSecret && !hasValidConnectedAccount;
 }
+
+export function hasValidStripeConnectPaymentSession(cart: {
+  payment_collection?: { payment_sessions?: PaymentSessionLike[] | null } | null;
+}): boolean {
+  const session = cart.payment_collection?.payment_sessions?.find(
+    (s) => s.status === 'pending' && s.provider_id === STRIPE_CONNECT_PROVIDER_ID,
+  );
+
+  if (!session || isStaleStripeConnectPaymentSession(session)) {
+    return false;
+  }
+
+  const clientSecret = session.data?.client_secret;
+  return typeof clientSecret === 'string' && clientSecret.length > 0;
+}

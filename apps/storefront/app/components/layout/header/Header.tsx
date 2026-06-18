@@ -69,6 +69,18 @@ export const Header: FC<HeaderProps> = () => {
                 <div className="flex flex-wrap-reverse items-center gap-x-6 sm:justify-end">
                   {headerNavigationItems && (
                     <div className="hidden h-full gap-6 lg:flex">
+                      <URLAwareNavLink
+                        url="/sushi"
+                        className={({ isActive }) =>
+                          clsx('my-4 flex items-center whitespace-nowrap text-base font-normal', {
+                            'hover:underline': !isActive,
+                            'border-b-primary-200 border-b-2': isActive,
+                          })
+                        }
+                        prefetch="viewport"
+                      >
+                        Order Sushi
+                      </URLAwareNavLink>
                       {headerNavigationItems.slice(0, 6).map(({ id, new_tab, ...navItemProps }, index) => (
                         <URLAwareNavLink
                           key={id}

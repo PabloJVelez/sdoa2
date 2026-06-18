@@ -1,8 +1,10 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { getVariantBySelectedOptions } from '@libs/util/products';
-import { setCartId } from '@libs/util/server/cookies.server';
-import { addToCart } from '@libs/util/server/data/cart.server';
+import { cartContainsEventItems, isSushiProduct } from '@libs/util/sushi';
+import { removeCartId, setCartId } from '@libs/util/server/cookies.server';
+import { addToCart, retrieveCart } from '@libs/util/server/data/cart.server';
 import { getProductsById } from '@libs/util/server/data/products.server';
+import { fetchSushiProductById } from '@libs/util/server/sushi-products.server';
 import { getSelectedRegion } from '@libs/util/server/data/regions.server';
 import { FieldErrors } from 'react-hook-form';
 import { type ActionFunctionArgs, data } from 'react-router';
@@ -43,60 +45,30 @@ export async function action({ request }: ActionFunctionArgs) {
     }
   }
 
-  console.log('Cart API Debug:', {
-    productId,
-    options,
-    quantity,
-    formDataEntries: Array.from(formData.entries())
-  });
-
   const region = await getSelectedRegion(request.headers);
 
-  const [product] = await getProductsById({
+  const [storeProduct] = await getProductsById({
     ids: [productId],
     regionId: region.id,
   }).catch(() => []);
+
+  const product =
+    storeProduct ?? (await fetchSushiProductById(productId));
 
   if (!product) {
     return data({ errors: { root: { message: 'Product not found.' } } as FieldErrors }, { status: 400 });
   }
 
-  console.log('Product Debug:', {
-    productId: product.id,
-    productTitle: product.title,
-    variants: product.variants?.map(v => ({
-      id: v.id,
-      sku: v.sku,
-      options: v.options?.map(o => ({
-        option_id: o.option_id,
-        value: o.value
-      }))
-    }))
-  });
+  const variantIdFromForm = formData.get('variantId');
+  const variantFromForm =
+    typeof variantIdFromForm === 'string'
+      ? product.variants?.find((v) => v.id === variantIdFromForm)
+      : undefined;
 
-  const variant = getVariantBySelectedOptions(product.variants || [], options);
+  const variant = variantFromForm ?? getVariantBySelectedOptions(product.variants || [], options);
 
-  console.log('Variant Match Debug:', {
-    options,
-    foundVariant: variant ? {
-      id: variant.id,
-      sku: variant.sku,
-      options: variant.options?.map(o => ({
-        option_id: o.option_id,
-        value: o.value
-      }))
-    } : null
-  });
-
-  // If no variant found with options, try to get the first variant for products with only one variant (like event products)
+  // If no variant found with options, use the sole variant (sushi bundles, event tickets)
   const finalVariant = variant || (product.variants?.length === 1 ? product.variants[0] : null);
-
-  console.log('Final Variant Debug:', {
-    variantFromOptions: variant ? variant.id : null,
-    singleVariant: product.variants?.length === 1 ? product.variants[0]?.id : null,
-    finalVariantId: finalVariant?.id,
-    productVariantCount: product.variants?.length
-  });
 
   if (!finalVariant) {
     return data(
@@ -111,14 +83,53 @@ export async function action({ request }: ActionFunctionArgs) {
     );
   }
 
+  const replaceCart = formData.get('replaceCart') === 'true';
   const responseHeaders = new Headers();
+  const existingCart = await retrieveCart(request);
+  const addingSushi = isSushiProduct(product);
 
-  const { cart } = await addToCart(request, {
-    variantId: finalVariant.id!,
-    quantity,
-  });
+  if (
+    addingSushi &&
+    existingCart &&
+    cartContainsEventItems(existingCart) &&
+    !replaceCart
+  ) {
+    return data(
+      {
+        cartConflict: 'event_to_sushi',
+        message:
+          'Your cart has chef event tickets. Adding sushi will clear the current cart.',
+      },
+      { status: 409 },
+    );
+  }
 
-  await setCartId(responseHeaders, cart.id);
+  if (replaceCart && existingCart) {
+    await removeCartId(responseHeaders);
+  }
 
-  return data({ cart }, { headers: responseHeaders });
+  try {
+    const { cart } = await addToCart(request, {
+      variantId: finalVariant.id!,
+      quantity,
+      ...(addingSushi ? { metadata: { order_flow: 'sushi' } } : {}),
+    });
+
+    await setCartId(responseHeaders, cart.id);
+    return data({ cart }, { headers: responseHeaders });
+  } catch (error: unknown) {
+    const message =
+      error instanceof Error ? error.message : String(error);
+    if (message.includes('SUSHI_EVENT_CART_CONFLICT')) {
+      return data(
+        {
+          cartConflict: 'event_to_sushi',
+          message:
+            'Your cart has chef event tickets. Adding sushi will clear the current cart.',
+        },
+        { status: 409 },
+      );
+    }
+    throw error;
+  }
 }
