@@ -21,6 +21,11 @@ import {
 import { SUSHI_DELIVERY_MODULE } from "../../../../modules/sushi-delivery"
 import type SushiDeliveryModuleService from "../../../../modules/sushi-delivery/service"
 
+type SushiCartFeeLine = {
+  id?: string | null
+  metadata?: Record<string, unknown> | null
+}
+
 const schema = z.object({
   cart_id: z.string().min(1),
   fulfillment_type: z.enum(["pickup", "delivery"]),
@@ -95,7 +100,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
   if (parsed.data.fulfillment_type === "pickup") {
     const feeLineIds =
       (cart.items ?? [])
-        .filter((item) => {
+        .filter((item: SushiCartFeeLine) => {
           if (!item?.id) return false
           const metadata = item.metadata as
             | Record<string, unknown>
@@ -103,7 +108,7 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
             | undefined
           return metadata?.kind === SUSHI_DELIVERY_FEE_LINE_KIND
         })
-        .map((item) => item!.id) ?? []
+        .map((item: SushiCartFeeLine) => item.id!) ?? []
 
     if (feeLineIds.length) {
       await deleteLineItemsWorkflow(req.scope).run({
@@ -149,12 +154,12 @@ export async function POST(req: MedusaRequest, res: MedusaResponse) {
 
   const feeLineIds =
     (cart.items ?? [])
-      .filter((item) => {
+      .filter((item: SushiCartFeeLine) => {
         if (!item?.id) return false
         const metadata = item.metadata as Record<string, unknown> | null | undefined
         return metadata?.kind === SUSHI_DELIVERY_FEE_LINE_KIND
       })
-      .map((item) => item!.id) ?? []
+      .map((item: SushiCartFeeLine) => item.id!) ?? []
 
   if (feeLineIds.length) {
     await deleteLineItemsWorkflow(req.scope).run({

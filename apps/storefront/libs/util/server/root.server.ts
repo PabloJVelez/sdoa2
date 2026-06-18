@@ -47,6 +47,7 @@ export const getRootLoader = async ({ request }: LoaderFunctionArgs) => {
       customer,
       regions,
       region,
+      hasPublishedProducts: true,
       siteDetails: {
         store: {
           name: 'S.D.O.A.',

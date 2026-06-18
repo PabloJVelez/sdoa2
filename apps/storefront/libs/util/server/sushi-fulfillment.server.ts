@@ -28,6 +28,9 @@ export type SushiFulfillmentResult =
       ok: true;
       fulfillmentType: 'pickup' | 'delivery';
       orderRequestId?: string;
+      outOfRange?: boolean;
+      miles?: number | null;
+      deliveryFeeCents?: number | null;
       cart?: unknown;
     };
 

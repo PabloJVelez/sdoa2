@@ -117,7 +117,6 @@ medusaIntegrationTestRunner({
         const { data: feeVariantRows } = await query.graph({
           entity: "product_variant",
           fields: ["product_id"],
-          // @ts-expect-error filter sku is valid at runtime but missing from generated types
           filters: { sku: "SUSHI-DELIVERY-FEE" },
         })
 
