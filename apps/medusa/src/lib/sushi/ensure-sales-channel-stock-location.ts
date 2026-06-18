@@ -1,4 +1,5 @@
 import { linkSalesChannelsToStockLocationWorkflow } from "@medusajs/medusa/core-flows"
+import type { MedusaContainer } from "@medusajs/framework/types"
 import {
   ContainerRegistrationKeys,
   MedusaError,
@@ -11,7 +12,7 @@ import {
 } from "./variant-inventory"
 
 export async function ensureDefaultSalesChannelStockLocationLink(
-  container: { resolve: (key: string) => unknown },
+  container: MedusaContainer,
 ): Promise<{ salesChannelId: string; stockLocationId: string }> {
   const storeModule = container.resolve(Modules.STORE) as {
     listStores: () => Promise<Array<{ default_sales_channel_id?: string | null }>>
@@ -46,7 +47,7 @@ export async function ensureDefaultSalesChannelStockLocationLink(
 }
 
 export async function ensureSushiCartInventoryReady(
-  container: { resolve: (key: string) => unknown },
+  container: MedusaContainer,
   cartId: string,
 ): Promise<void> {
   await ensureDefaultSalesChannelStockLocationLink(container)

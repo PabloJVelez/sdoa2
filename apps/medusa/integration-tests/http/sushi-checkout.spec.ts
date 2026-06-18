@@ -117,6 +117,7 @@ medusaIntegrationTestRunner({
         const { data: feeVariantRows } = await query.graph({
           entity: "product_variant",
           fields: ["product_id"],
+          // @ts-expect-error filter sku is valid at runtime but missing from generated types
           filters: { sku: "SUSHI-DELIVERY-FEE" },
         })
 
@@ -126,7 +127,7 @@ medusaIntegrationTestRunner({
         const { data: feeProductRows } = await query.graph({
           entity: "product",
           fields: ["id", "shipping_profile.id"],
-          filters: { id: feeProductId },
+          filters: { id: feeProductId ?? undefined },
         })
 
         expect(feeProductRows?.[0]?.shipping_profile?.id).toEqual(

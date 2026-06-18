@@ -48,7 +48,7 @@ export async function rebuildSushiPaymentCartFoodLines(
     filters: { id: cartId },
   })
 
-  const currentItems = (carts?.[0]?.items ?? []) as Array<{
+  const currentItems = (carts?.[0]?.items ?? []) as unknown as Array<{
     id?: string
     variant_id?: string
     quantity?: number

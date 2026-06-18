@@ -110,11 +110,13 @@ export async function ensureSushiDeliveryFeeProductShippingProfile(
   container: MedusaContainer,
 ): Promise<void> {
   const query = container.resolve(ContainerRegistrationKeys.QUERY)
-  const { data: variants } = await query.graph({
+  type VariantRow = { id?: string; product_id?: string }
+  const { data: variants } = (await query.graph({
     entity: "product_variant",
     fields: ["id", "product_id"],
+    // @ts-expect-error filter sku is valid at runtime but missing from generated types
     filters: { sku: SUSHI_DELIVERY_FEE_SKU },
-  })
+  })) as { data?: VariantRow[] }
 
   const productId = variants?.[0]?.product_id
   if (typeof productId !== "string") return

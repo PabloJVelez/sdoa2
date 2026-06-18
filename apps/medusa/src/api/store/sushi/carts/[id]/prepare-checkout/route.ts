@@ -8,17 +8,22 @@ async function clearPendingPaymentSessions(
   cartId: string,
 ): Promise<void> {
   const query = scope.resolve(ContainerRegistrationKeys.QUERY)
-  const { data: carts } = await query.graph({
+  const { data: carts } = (await query.graph({
     entity: "cart",
     fields: [
       "payment_collection.payment_sessions.id",
       "payment_collection.payment_sessions.status",
     ],
     filters: { id: cartId },
-  })
+  })) as {
+    data?: Array<{
+      payment_collection?: {
+        payment_sessions?: Array<{ id?: string; status?: string }>
+      } | null
+    }>
+  }
 
-  const sessions =
-    carts?.[0]?.payment_collection?.payment_sessions ?? []
+  const sessions = carts?.[0]?.payment_collection?.payment_sessions ?? []
 
   const pendingIds = sessions
     .filter(
