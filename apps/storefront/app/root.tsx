@@ -21,8 +21,9 @@ import { useRootLoaderData } from './hooks/useRootLoaderData';
 export const getRootMeta: MetaFunction = ({ data }) => {
   // Using dynamic import inline to avoid module resolution issues
   // In production, consider moving this to a hook or loader
-  const title = 'Private Chef - Premium Culinary Experiences';
-  const description = 'Private chef experiences: cooking classes, plated dinners, and buffet-style events.';
+  const title = 'Sushi Delivery of Austin - Premium Sushi & Omakase Experiences';
+  const description =
+    "Austin's premier sushi experience. Order artisanal bento boxes for pickup or book a private omakase dinner.";
   const ogTitle = title;
   const ogDescription = description;
   const ogImage = '';

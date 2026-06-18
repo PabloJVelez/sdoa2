@@ -25,8 +25,8 @@ export default function AboutChefRoute() {
                 {chefConfig.displayName}
               </h1>
               <p className="mx-auto text-md md:text-2xl !leading-normal">
-                {chefConfig.bio.short} With years of professional experience, crafting unforgettable menus using fresh,
-                seasonal ingredients and providing a seamless, restaurant-quality experience in your home.
+                {chefConfig.bio.short} With years of professional experience, crafting unforgettable sushi experiences
+                using premium, fresh ingredients and providing a seamless, authentic Japanese dining experience.
               </p>
             </div>
           }
@@ -43,15 +43,15 @@ export default function AboutChefRoute() {
           <div className="space-y-4 text-lg text-gray-700">
             <h2 className="font-italiana text-3xl text-gray-900">Philosophy</h2>
             <p>
-              Every event is a chance to create connection through food. From intimate dinners to interactive classes,
-              designing experiences that are warm, professional, and tailored to your tastes.
+              Every experience is a celebration of Japanese culinary artistry. From artisanal bento boxes to intimate
+              omakase dinners, we craft experiences that honor tradition while embracing innovation.
             </p>
           </div>
           <div className="space-y-4 text-lg text-gray-700">
             <h2 className="font-italiana text-3xl text-gray-900">Experiences</h2>
             <p>
-              Choose from cooking classes, plated dinners, or buffet-style events. All ingredients and equipment are
-              provided, so you can relax and enjoy.
+              From bento boxes for pickup to private sushi dinners in your home, each experience is designed around
+              premium fish, thoughtful presentation, and relaxed hospitality.
             </p>
           </div>
         </div>

@@ -169,20 +169,23 @@ export const action = async (actionArgs: ActionFunctionArgs) => {
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
   return [
-    { title: 'Request Your Culinary Experience - Private Chef' },
+    { title: 'Request Your Sushi Experience - Sushi Delivery of Austin' },
     {
       name: 'description',
       content:
-        'Book a personalized culinary experience. Choose from cooking classes, plated dinners, or buffet-style events.',
+        'Book a personalized sushi experience. Order bento boxes for pickup or request an omakase dinner in your home.',
     },
-    { property: 'og:title', content: 'Request Your Culinary Experience - Private Chef' },
+    { property: 'og:title', content: 'Request Your Sushi Experience - Sushi Delivery of Austin' },
     {
       property: 'og:description',
       content:
         'Submit a request for your personalized culinary experience. Your request will be reviewed and a custom proposal will be created for your event.',
     },
     { property: 'og:type', content: 'website' },
-    { name: 'keywords', content: 'request event, book chef, cooking class, private dining, culinary experience' },
+    {
+      name: 'keywords',
+      content: 'request event, book sushi chef, omakase austin, bento box pickup, private sushi dining, sushi experience',
+    },
   ];
 };
 
@@ -199,9 +202,9 @@ export default function RequestPage() {
   return (
     <Container className="py-12 lg:py-16 max-w-4xl">
       <div className="text-center mb-12">
-        <h1 className="text-4xl md:text-5xl font-italiana text-primary-900 mb-4">Request Your Culinary Experience</h1>
+        <h1 className="text-4xl md:text-5xl font-italiana text-primary-900 mb-4">Request Your Sushi Experience</h1>
         <p className="text-lg text-primary-600 max-w-2xl mx-auto">
-          Tell us about your event and we'll create a personalized proposal for your culinary experience.
+          Tell us about your event and we'll create a personalized proposal for your sushi experience.
         </p>
       </div>
 

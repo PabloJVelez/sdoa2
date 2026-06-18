@@ -25,7 +25,7 @@ export const Header: FC<HeaderProps> = () => {
   if (!headerNavigationItems) return <>Loading...</>;
 
   return (
-    <header className="sticky top-0 z-40 mkt-header text-white bg-[#3F432C] opacity-75 backdrop-blur">
+    <header className="sticky top-0 z-40 mkt-header text-white bg-primary-800/95 backdrop-blur">
       <nav aria-label="Top">
         <div className="bg-transparent">
           <div className="">

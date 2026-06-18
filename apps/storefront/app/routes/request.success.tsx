@@ -6,17 +6,17 @@ import { useLoaderData, useSearchParams, Link, redirect } from 'react-router';
 
 export const meta: MetaFunction = () => {
   return [
-    { title: 'Request Submitted Successfully - Private Chef' },
+    { title: 'Request Submitted Successfully - Sushi Delivery of Austin' },
     {
       name: 'description',
       content:
-        'Your culinary experience request has been submitted successfully. Your request will be reviewed and responded to within 24 hours.',
+        'Your sushi experience request has been submitted successfully. Your request will be reviewed and responded to within 24 hours.',
     },
-    { property: 'og:title', content: 'Request Submitted Successfully - Private Chef' },
+    { property: 'og:title', content: 'Request Submitted Successfully - Sushi Delivery of Austin' },
     {
       property: 'og:description',
       content:
-        'Your culinary experience request has been submitted successfully. Your request will be reviewed and responded to within 24 hours.',
+        'Your sushi experience request has been submitted successfully. Your request will be reviewed and responded to within 24 hours.',
     },
     { property: 'og:type', content: 'website' },
     { name: 'robots', content: 'noindex' }, // Don't index success pages
