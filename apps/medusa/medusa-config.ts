@@ -50,6 +50,10 @@ const customModules = [
     },
   },
   {
+    resolve: './src/modules/sushi-delivery',
+    options: {},
+  },
+  {
     resolve: './src/modules/google-calendar-connection',
     options: {
       clientId: GOOGLE_CALENDAR_CLIENT_ID,

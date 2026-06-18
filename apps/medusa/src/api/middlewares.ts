@@ -1,7 +1,17 @@
-import { defineMiddlewares, errorHandler, MedusaNextFunction, MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
+import {
+  defineMiddlewares,
+  errorHandler,
+  MedusaNextFunction,
+  MedusaRequest,
+  MedusaResponse,
+} from "@medusajs/framework/http"
+import {
+  ContainerRegistrationKeys,
+  MedusaError,
+} from "@medusajs/framework/utils"
 import * as Sentry from "@sentry/node"
+import { isSushiDeliveryFeeLine } from "../lib/sushi/product"
 
-// Lazily initialize Sentry to ensure it is available in all environments
 let sentryInited = false
 function ensureSentry() {
   if (sentryInited) return
@@ -19,22 +29,71 @@ function ensureSentry() {
 
 const originalErrorHandler = errorHandler()
 
+async function blockSushiDeliveryFeeLineItemDelete(
+  req: MedusaRequest,
+  res: MedusaResponse,
+  next: MedusaNextFunction,
+) {
+  if (req.method !== "DELETE") {
+    return next()
+  }
+
+  const cartId = req.params.id
+  const lineId = req.params.line_id
+
+  if (!cartId || !lineId) {
+    return next()
+  }
+
+  try {
+    const query = req.scope.resolve(ContainerRegistrationKeys.QUERY)
+    const { data: items } = await query.graph({
+      entity: "line_item",
+      fields: ["id", "metadata", "variant_sku"],
+      filters: { id: lineId, cart_id: cartId },
+    })
+
+    const lineItem = items?.[0]
+    if (lineItem && isSushiDeliveryFeeLine(lineItem)) {
+      throw new MedusaError(
+        MedusaError.Types.NOT_ALLOWED,
+        "Sushi delivery fee lines cannot be removed manually",
+      )
+    }
+  } catch (error) {
+    if (error instanceof MedusaError) {
+      return res.status(400).json({ message: error.message })
+    }
+    return next(error)
+  }
+
+  return next()
+}
+
 export default defineMiddlewares({
-  // Capture all API route errors in Sentry
   errorHandler: (
     error: unknown,
     req: MedusaRequest,
     res: MedusaResponse,
-    next: MedusaNextFunction
+    next: MedusaNextFunction,
   ) => {
     ensureSentry()
-    Sentry.captureException(error instanceof Error ? error : new Error(String(error)))
-    // Forward to Medusa's default error handler
-    return (originalErrorHandler as (
-      err: unknown,
-      req: MedusaRequest,
-      res: MedusaResponse,
-      next: MedusaNextFunction
-    ) => void)(error, req, res, next)
+    Sentry.captureException(
+      error instanceof Error ? error : new Error(String(error)),
+    )
+    return (
+      originalErrorHandler as (
+        err: unknown,
+        req: MedusaRequest,
+        res: MedusaResponse,
+        next: MedusaNextFunction,
+      ) => void
+    )(error, req, res, next)
   },
+  routes: [
+    {
+      matcher: "/store/carts/:id/line-items/:line_id",
+      middlewares: [blockSushiDeliveryFeeLineItemDelete],
+    },
+  ],
 })

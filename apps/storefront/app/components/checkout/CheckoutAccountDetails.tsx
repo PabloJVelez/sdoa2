@@ -15,7 +15,7 @@ import { FetcherKeys } from '@libs/util/fetcher-keys';
 import type { StoreRegion, StoreRegionCountry } from '@medusajs/types';
 import { useEffect, useRef } from 'react';
 import { FieldErrors } from 'react-hook-form';
-import { useFetcher } from 'react-router';
+import { useFetcher, useNavigation } from 'react-router';
 import { RemixFormProvider, useRemixForm } from 'remix-hook-form';
 import { SubmitButton } from '../common/remix-hook-form/buttons/SubmitButton';
 import { FormError } from '../common/remix-hook-form/forms/FormError';
@@ -29,15 +29,20 @@ const NEW_SHIPPING_ADDRESS_ID = 'new';
 
 export interface CheckoutAccountDetailsProps {
   isDigitalOnly?: boolean;
+  shippingAddressLabel?: string;
 }
 
-export const CheckoutAccountDetails = ({ isDigitalOnly = false }: CheckoutAccountDetailsProps) => {
+export const CheckoutAccountDetails = ({
+  isDigitalOnly = false,
+  shippingAddressLabel = 'Shipping Address',
+}: CheckoutAccountDetailsProps) => {
   const checkoutAccountDetailsFormFetcher = useFetcher<{
     errors: FieldErrors;
   }>({ key: FetcherKeys.cart.accountDetails });
+  const navigation = useNavigation();
   const { customer } = useCustomer();
   const { regions } = useRegions();
-  const { step, setStep, goToNextStep, cart, isCartMutating } = useCheckout();
+  const { step, setStep, goToNextStep, cart, isCartMutating, activePaymentSession } = useCheckout();
   const isActiveStep = step === CheckoutStep.ACCOUNT_DETAILS;
 
   if (!cart) return null;
@@ -116,26 +121,48 @@ export const CheckoutAccountDetails = ({ isDigitalOnly = false }: CheckoutAccoun
     company: '',
   };
 
-  // Track previous isSubmitting to detect form completion
-  const wasSubmittingRef = useRef(false);
+  const pendingAdvanceRef = useRef(false);
 
   useEffect(() => {
-    // Only auto-advance when transitioning FROM submitting TO not submitting (form just completed)
-    // This prevents advancing on mount if cart already has data
-    const justFinishedSubmitting = wasSubmittingRef.current && !isSubmitting;
-
-    if (isActiveStep && justFinishedSubmitting && !hasErrors && isComplete) {
-      form.reset();
-      goToNextStep();
+    if (isSubmitting) {
+      pendingAdvanceRef.current = true;
+      return;
     }
 
-    // Update ref for next render
-    wasSubmittingRef.current = isSubmitting;
-  }, [isSubmitting, isComplete]); // Keep same dependencies as original
+    if (
+      !isActiveStep ||
+      !pendingAdvanceRef.current ||
+      hasErrors ||
+      !isComplete ||
+      navigation.state !== 'idle' ||
+      isCartMutating ||
+      !activePaymentSession
+    ) {
+      return;
+    }
+
+    pendingAdvanceRef.current = false;
+    form.reset();
+    goToNextStep();
+  }, [
+    isSubmitting,
+    isComplete,
+    hasErrors,
+    isActiveStep,
+    navigation.state,
+    isCartMutating,
+    activePaymentSession,
+    form,
+    goToNextStep,
+  ]);
 
   const handleCancel = () => {
     goToNextStep();
   };
+
+  const savedShippingAddress = cart.shipping_address
+    ? medusaAddressToAddress(cart.shipping_address as MedusaAddress)
+    : null;
 
   const showCompleted = isComplete && !isActiveStep;
 
@@ -145,8 +172,12 @@ export const CheckoutAccountDetails = ({ isDigitalOnly = false }: CheckoutAccoun
         {isDigitalOnly ? 'Billing details' : 'Account details'}
       </CheckoutSectionHeader>
 
-      {!isActiveStep && isComplete && !isDigitalOnly && (
-        <AddressDisplay title="Shipping Address" address={shippingAddress} countryOptions={countryOptions} />
+      {!isActiveStep && isComplete && !isDigitalOnly && savedShippingAddress && (
+        <AddressDisplay
+          title={shippingAddressLabel}
+          address={savedShippingAddress}
+          countryOptions={countryOptions}
+        />
       )}
 
       {isActiveStep && (

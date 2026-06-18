@@ -1,5 +1,5 @@
 import { calculateEstimatedShipping } from '@libs/util/carts';
-import { formatPrice } from '@libs/util/prices';
+import { formatCartAmount } from '@libs/util/prices';
 import { PromotionDTO, StoreCart, StoreCartShippingOption, StoreRegion } from '@medusajs/types';
 import clsx from 'clsx';
 import { FC, HTMLAttributes } from 'react';
@@ -23,13 +23,12 @@ const CheckoutOrderSummaryTotalsItem: FC<CheckoutOrderSummaryTotalsItemProps> = 
   className,
   region,
 }) => {
-  // Medusa stores prices in dollars
-  const amountInDollars = amount || 0;
-  
   return (
     <div className={clsx('flex items-center justify-between text-sm', className)}>
       <dt>{label}</dt>
-      <dd className="font-bold text-gray-900">{formatPrice(amountInDollars, { currency: region?.currency_code })}</dd>
+      <dd className="font-bold text-gray-900">
+        {formatCartAmount(amount, region?.currency_code)}
+      </dd>
     </div>
   );
 };

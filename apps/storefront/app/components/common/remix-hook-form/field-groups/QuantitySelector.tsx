@@ -4,6 +4,14 @@ import { FC } from 'react';
 import { Controller } from 'react-hook-form';
 import { useRemixFormContext } from 'remix-hook-form';
 
+export type QuantitySelectorLabels = {
+  /** Shown inside the select control (e.g. "Quantity", "Tickets"). */
+  prefix?: string;
+  unitSingular?: string;
+  unitPlural?: string;
+  empty?: string;
+};
+
 interface QuantitySelectorProps {
   variant: StoreProductVariant | undefined;
   maxInventory?: number;
@@ -12,7 +20,10 @@ interface QuantitySelectorProps {
   className?: string;
   formId?: string;
   onChange?: (quantity: number) => void;
-  customInventoryQuantity?: number; // New prop for custom inventory quantity
+  customInventoryQuantity?: number;
+  labels?: QuantitySelectorLabels;
+  /** Stacked: label above select. Inline: label inside select (events/tickets). */
+  layout?: 'stacked' | 'inline';
 }
 
 export const QuantitySelector: FC<QuantitySelectorProps> = ({
@@ -22,7 +33,21 @@ export const QuantitySelector: FC<QuantitySelectorProps> = ({
   minQuantity = 1,
   onChange,
   customInventoryQuantity,
+  labels,
+  layout = 'inline',
 }) => {
+  const prefixLabel = labels?.prefix ?? 'Quantity';
+  const unitSingular = labels?.unitSingular;
+  const unitPlural = labels?.unitPlural ?? labels?.unitSingular;
+  const emptyLabel = labels?.empty ?? 'Not available';
+
+  const formatOptionLabel = (value: number) => {
+    if (!unitSingular) {
+      return String(value);
+    }
+    const unit = value === 1 ? unitSingular : unitPlural ?? `${unitSingular}s`;
+    return `${value} ${unit}`;
+  };
   const formContext = useRemixFormContext();
 
   if (!formContext) {
@@ -57,20 +82,36 @@ export const QuantitySelector: FC<QuantitySelectorProps> = ({
     }
   })
 
+  const selectClassName = clsx(
+    'focus:border-orange-500 focus:ring-orange-500 !h-14 !w-full rounded-xl border-2 border-gray-200 pr-4 text-lg font-semibold bg-white shadow-sm hover:border-orange-300 transition-colors',
+    layout === 'inline' ? 'pl-20' : 'pl-4',
+  );
+
   return (
     <Controller
       name="quantity"
       control={control}
       render={({ field }) => (
         <div className={clsx('w-full', className)}>
-          <label htmlFor="quantity" className="sr-only">
-            Quantity
-          </label>
-          <div className="relative">
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-600 font-medium">Tickets</span>
+          {layout === 'stacked' ? (
+            <label htmlFor="quantity" className="mb-1 block text-sm font-medium text-gray-700">
+              {prefixLabel}
+            </label>
+          ) : (
+            <label htmlFor="quantity" className="sr-only">
+              {prefixLabel}
+            </label>
+          )}
+          <div className={layout === 'inline' ? 'relative' : undefined}>
+            {layout === 'inline' && (
+              <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-gray-600 font-medium">
+                {prefixLabel}
+              </span>
+            )}
             <select
               {...field}
-              className="focus:border-orange-500 focus:ring-orange-500 !h-14 !w-full rounded-xl border-2 border-gray-200 pl-20 pr-4 text-lg font-semibold bg-white shadow-sm hover:border-orange-300 transition-colors"
+              id="quantity"
+              className={selectClassName}
               value={String(
                 optionsArray.some((o) => o.value === Number(field.value))
                   ? field.value
@@ -84,11 +125,11 @@ export const QuantitySelector: FC<QuantitySelectorProps> = ({
               disabled={optionsArray.length === 0}
             >
               {optionsArray.length === 0 ? (
-                <option value="">No tickets available</option>
+                <option value="">{emptyLabel}</option>
               ) : (
                 optionsArray.map((option) => (
                   <option key={option.value} value={option.value}>
-                    {option.label} {option.value === 1 ? 'Ticket' : 'Tickets'}
+                    {formatOptionLabel(option.value)}
                   </option>
                 ))
               )}

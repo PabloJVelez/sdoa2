@@ -153,14 +153,14 @@ class StripeConnectProviderService extends AbstractPaymentProvider<StripeConnect
       this.logger_.info(
         `${StripeConnectProviderService.LOG_PREFIX} [fee] getCartLines(cartId=${cartId}) raw items=${items.length}`,
       );
-      return items.map((item) => ({
-        sku: item.variant_sku ?? '',
-        quantity: Number(item.quantity) || 0,
-        unit_price_cents: (() => {
-          const raw = Number(item.unit_price) || 0;
-          return Number.isInteger(raw) ? raw : getSmallestUnit(raw, currencyCode);
-        })(),
-      }));
+      return items.map((item) => {
+        const raw = Number(item.unit_price) || 0;
+        return {
+          sku: item.variant_sku ?? '',
+          quantity: Number(item.quantity) || 0,
+          unit_price_cents: getSmallestUnit(raw, currencyCode),
+        };
+      });
     } catch (e) {
       this.logger_.warn(`${StripeConnectProviderService.LOG_PREFIX} getCartLines failed: ${(e as Error).message}`);
       throw e;

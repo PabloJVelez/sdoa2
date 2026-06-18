@@ -3,6 +3,7 @@ import { Image } from '@app/components/common/images/Image';
 import { useCheckout } from '@app/hooks/useCheckout';
 import { useRemoveCartItem } from '@app/hooks/useRemoveCartItem';
 import { formatPrice } from '@libs/util/prices';
+import { isSushiDeliveryFeeLine } from '@libs/util/sushi';
 import { StoreCart, StoreCartLineItem } from '@medusajs/types';
 import { FC } from 'react';
 import { Link } from 'react-router';
@@ -24,12 +25,15 @@ export const CheckoutOrderSummaryItem: FC<CheckoutOrderSummaryItemProps> = ({ it
   const isRemovingFromCart = ['loading', 'submitting'].includes(removeCartItem.state);
   const metadata = (item.metadata ?? {}) as Record<string, unknown>
   const isAdditionalCharge = metadata.kind === "chef_event_additional_charge"
+  const isDeliveryFee = isSushiDeliveryFeeLine(item)
   const displayTitle =
     isAdditionalCharge && typeof metadata.charge_name === "string"
       ? metadata.charge_name
-      : item.product_title
+      : isDeliveryFee
+        ? "Delivery fee"
+        : item.product_title
   const displayVariantTitle =
-    isAdditionalCharge ? "One-time event charge" : item.variant_title
+    isAdditionalCharge ? "One-time event charge" : isDeliveryFee ? null : item.variant_title
 
   if (!cart) return null;
 
@@ -51,10 +55,12 @@ export const CheckoutOrderSummaryItem: FC<CheckoutOrderSummaryItemProps> = ({ it
                 {displayTitle}
               </Link>
             </h4>
-            <p className="mt-0.5 text-sm text-gray-500">{displayVariantTitle}</p>
+            {displayVariantTitle ? (
+              <p className="mt-0.5 text-sm text-gray-500">{displayVariantTitle}</p>
+            ) : null}
           </div>
 
-          {!isAdditionalCharge ? (
+          {!isAdditionalCharge && !isDeliveryFee ? (
             <div className="ml-4 flow-root flex-shrink-0">
               <Button variant="link" onClick={handleRemoveFromCart} disabled={isRemovingFromCart} className="text-sm">
                 {isRemovingFromCart ? 'Removing' : 'Remove'}

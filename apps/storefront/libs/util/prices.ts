@@ -6,19 +6,23 @@ const locale = 'en-US';
 export interface FormatPriceOptions {
   currency: Intl.NumberFormatOptions['currency'];
   quantity?: number;
+  /** Pass true only when the amount is in minor units (e.g. API fields named *Cents). Medusa cart/order amounts use major units. */
+  inCents?: boolean;
 }
 
 export function formatPrice(amount: number | null, options: FormatPriceOptions) {
   const defaultOptions = {
     currency: 'usd',
     quantity: 1,
+    inCents: false,
   };
-  const { currency, quantity } = merge({}, defaultOptions, options);
+  const { currency, quantity, inCents } = merge({}, defaultOptions, options);
+  const majorUnits = inCents ? (amount || 0) / 100 : amount || 0;
 
   return new Intl.NumberFormat(locale, {
     style: 'currency',
     currency,
-  }).format((amount || 0) * quantity);
+  }).format(majorUnits * quantity);
 }
 
 export function sortProductVariantsByPrice(product: StoreProduct) {
@@ -44,34 +48,26 @@ export function getCheapestProductVariant(product: StoreProduct) {
 }
 
 export function formatLineItemPrice(lineItem: StoreCartLineItem, regionCurrency: string) {
-  console.log('💰 formatLineItemPrice Debug:', {
-    lineItemId: lineItem.id,
-    productTitle: lineItem.product_title,
-    unitPrice: lineItem.unit_price,
-    quantity: lineItem.quantity,
-    regionCurrency: regionCurrency,
-    totalBeforeFormat: lineItem.unit_price && lineItem.quantity ? lineItem.unit_price * lineItem.quantity : null
-  });
-
-  // Medusa stores prices in dollars
-  const priceInDollars = lineItem.unit_price || 0;
-  
-  return formatPrice(priceInDollars, {
+  return formatPrice(lineItem.unit_price || 0, {
     currency: regionCurrency,
     quantity: lineItem.quantity,
   });
 }
 
 export function formatCartSubtotal(cart: StoreCart) {
-  console.log('💰 formatCartSubtotal Debug:', {
-    itemSubtotal: cart.item_subtotal,
-    currencyCode: cart.region?.currency_code
-  });
-
-  // Medusa stores prices in dollars
-  const subtotalInDollars = cart.item_subtotal || 0;
-  
-  return formatPrice(subtotalInDollars, {
+  return formatPrice(cart.item_subtotal || 0, {
     currency: cart.region?.currency_code,
+  });
+}
+
+/** Format cart/order monetary fields from Medusa (major currency units). */
+export function formatCartAmount(
+  amount: number | null | undefined,
+  currency: string | undefined,
+  quantity = 1,
+) {
+  return formatPrice(amount || 0, {
+    currency,
+    quantity,
   });
 }
