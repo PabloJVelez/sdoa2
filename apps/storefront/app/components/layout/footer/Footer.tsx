@@ -39,32 +39,34 @@ export const Footer = () => {
   // };
 
   return (
-    <footer className="bg-accent-50 min-h-[140px] py-8 text-white">
-      <Container>
+    <footer className="bg-primary-900 text-primary-50">
+      <Container className="py-10">
         {/* Mobile-first responsive grid: stacks on mobile, 2 cols on sm, 3 cols on lg */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 w-full flex-col items-center gap-8 sm:flex-row sm:items-start sm:gap-16">
           {/* Culinary Experiences - Full width on mobile, spans 2 cols on sm, 1 col on lg */}
           <div className="flex w-full flex-col items-center gap-8 sm:w-auto sm:items-start sm:gap-9 sm:col-span-2 lg:col-span-1">
             <div className="flex flex-col gap-5 text-center sm:text-left">
-              <h4 className="font-bold">Culinary Experiences</h4>
-              <p className="text-sm">
-                Premium private chef experiences including cooking classes, plated dinners, and buffet-style events.
-                Restaurant-quality cuisine crafted in your home with professional service and unforgettable flavors.
+              <h4 className="font-bold text-primary-50">Sushi Experiences</h4>
+              <p className="text-sm text-primary-100">
+                Austin's premier sushi experience. From artisanal bento boxes for pickup to intimate omakase dinners in
+                your home. Authentic Japanese cuisine crafted with premium ingredients and traditional techniques.
               </p>
             </div>
-            <LogoStoreName />
+            <div className="text-primary-50">
+              <LogoStoreName />
+            </div>
           </div>
 
           {/* Quick Links - Full width on mobile, 1 col on sm and lg */}
           {footerNavigationItems && footerNavigationItems.length > 0 && (
             <nav className="pt-2 w-full sm:w-auto text-center sm:text-left">
-              <h5 className="font-bold mb-4">Quick Links</h5>
+              <h5 className="font-bold text-primary-50 mb-4">Quick Links</h5>
               {footerNavigationItems.map(({ id, new_tab, ...navItemProps }) => (
                 <URLAwareNavLink
                   key={id}
                   {...navItemProps}
                   newTab={new_tab}
-                  className="hover:text-slate-200 block pb-2 text-sm"
+                  className="block pb-2 text-sm text-primary-100 hover:text-accent-300"
                   prefetch="viewport"
                 >
                   {navItemProps.label}
@@ -76,10 +78,12 @@ export const Footer = () => {
           {/* Payment & Social - Full width on mobile, 1 col on sm and lg */}
           <div className="flex flex-col gap-5 w-full sm:w-auto text-center sm:text-left">
             <div className="flex flex-col gap-4">
-              <h5 className="font-bold">Payment</h5>
+              <h5 className="font-bold text-primary-50">Payment</h5>
               <div className="flex flex-col gap-2">
-                <div className="flex items-center justify-center sm:justify-start gap-2 text-sm">
-                  <span>🔒</span>
+                <div className="flex items-center justify-center sm:justify-start gap-2 text-sm text-primary-100">
+                  <span aria-hidden className="text-accent-400">
+                    🔒
+                  </span>
                   <span>Guaranteed safe & secure checkout</span>
                 </div>
                 <div className="flex justify-center sm:justify-start">

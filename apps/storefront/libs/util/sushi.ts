@@ -32,7 +32,7 @@ export function isSushiDeliveryFeeLine(item: {
   return metadata.kind === 'sushi_delivery_fee' || item.variant_sku === SUSHI_DELIVERY_FEE_SKU;
 }
 
-function lineItemIsSushiFood(item: StoreCart['items'][number]): boolean {
+function lineItemIsSushiFood(item: NonNullable<StoreCart['items']>[number]): boolean {
   if (isSushiDeliveryFeeLine(item as never)) return false;
 
   const line = item as unknown as Record<string, unknown>;

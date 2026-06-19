@@ -34,14 +34,14 @@ export const meta: MetaFunction<MenuPageLoaderData> = ({ data, location }) => {
   const menu = data?.menu;
 
   if (!menu) {
-    return [{ title: 'Menu Not Found | Private Chef' }, { name: 'robots', content: 'noindex' }];
+    return [{ title: 'Menu Not Found | Sushi Delivery of Austin' }, { name: 'robots', content: 'noindex' }];
   }
 
   const courseCount = menu.courses?.length || 0;
   const dishCount = menu.courses?.reduce((acc, course) => acc + (course.dishes?.length || 0), 0) || 0;
 
-  const title = `${menu.name} - Menu Template | Private Chef`;
-  const description = `${menu.name} featuring ${courseCount} courses and ${dishCount} dishes. Perfect for cooking classes, plated dinners, or buffet-style events. Request this menu for your culinary experience.`;
+  const title = `${menu.name} | Sushi Delivery of Austin`;
+  const description = `${menu.name} featuring ${courseCount} courses and ${dishCount} dishes. Perfect for bento pickup, private omakase dinners, or sushi buffet events. Request this menu for your sushi experience.`;
 
   return [
     { title },
@@ -52,7 +52,7 @@ export const meta: MetaFunction<MenuPageLoaderData> = ({ data, location }) => {
     { property: 'og:url', content: `https://yourstore.com${location.pathname}` },
     {
       name: 'keywords',
-      content: `${menu.name}, chef menu, culinary experience, private dining, cooking class, private chef`,
+      content: `${menu.name}, sushi menu, omakase, bento box, private sushi dining, sushi austin`,
     },
     // Structured data for Recipe/Menu
     {
@@ -62,13 +62,13 @@ export const meta: MetaFunction<MenuPageLoaderData> = ({ data, location }) => {
         '@context': 'https://schema.org',
         '@type': 'Recipe',
         name: menu.name,
-        description: `Professional chef menu template with ${courseCount} courses`,
+        description: `Sushi menu with ${courseCount} courses`,
         author: {
-          '@type': 'Person',
-          name: 'Private Chef',
+          '@type': 'Organization',
+          name: 'Sushi Delivery of Austin',
         },
-        recipeCategory: 'Chef Menu Template',
-        recipeCuisine: 'Contemporary',
+        recipeCategory: 'Sushi Menu',
+        recipeCuisine: 'Japanese',
         offers: {
           '@type': 'Offer',
           priceCurrency: 'USD',

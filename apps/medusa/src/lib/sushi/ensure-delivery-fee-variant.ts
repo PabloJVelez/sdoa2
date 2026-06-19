@@ -22,10 +22,6 @@ export async function ensureSushiDeliveryFeeVariantReady(
   const { data: variants } = (await query.graph({
     entity: "product_variant",
     fields: ["id", "sku", "allow_backorder", "manage_inventory", "product_id"],
-    // Medusa v2's generated filter types omit `sku` for product_variant, but the
-    // remote query supports it at runtime. Suppress just this line so we keep
-    // precise typing everywhere else (preferred over `as any`).
-    // @ts-expect-error filter sku is valid at runtime but missing from generated types
     filters: { sku: SUSHI_DELIVERY_FEE_SKU },
   })) as { data?: DeliveryFeeVariantRow[] }
 

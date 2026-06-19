@@ -37,9 +37,9 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
   const count = data?.count || 0;
 
-  const title = `Menus (${count}) | Private Chef`;
+  const title = `Menus (${count}) | Sushi Delivery of Austin`;
 
-  const description = `Browse ${count} expertly crafted menus. From intimate dinners to group celebrations, find the perfect menu for your culinary experience.`;
+  const description = `Browse ${count} expertly crafted sushi menus. From bento boxes to intimate omakase dinners, find the perfect menu for your event.`;
 
   return [
     { title },
@@ -47,7 +47,7 @@ export const meta: MetaFunction<typeof loader> = ({ data }) => {
     { property: 'og:title', content: title },
     { property: 'og:description', content: description },
     { property: 'og:type', content: 'website' },
-    { name: 'keywords', content: 'chef menus, private dining menus, tasting menus, cooking class menus, private chef' },
+    { name: 'keywords', content: 'sushi menus, omakase menus, bento boxes, private sushi dining, sushi austin' },
     ...(count === 0 ? [{ name: 'robots', content: 'noindex' }] : []),
   ];
 };

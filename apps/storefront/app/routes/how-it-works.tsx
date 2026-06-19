@@ -11,19 +11,19 @@ export const loader = async (args: LoaderFunctionArgs) => {
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
   return [
-    { title: 'How It Works - Private Chef' },
+    { title: 'How It Works - Sushi Delivery of Austin' },
     {
       name: 'description',
       content:
-        'Learn how our culinary experience booking process works. From browsing menus to enjoying your event, we make it simple and transparent.',
+        'Learn how our sushi experience booking process works. From ordering bento boxes to booking omakase dinners, we make it simple and transparent.',
     },
-    { property: 'og:title', content: 'How It Works - Private Chef' },
+    { property: 'og:title', content: 'How It Works - Sushi Delivery of Austin' },
     {
       property: 'og:description',
-      content: 'Step-by-step guide to booking your personalized culinary experience.',
+      content: 'Step-by-step guide to ordering sushi or booking your personalized omakase experience.',
     },
     { property: 'og:type', content: 'website' },
-    { name: 'keywords', content: 'how it works, booking process, private chef, culinary experience, chef services' },
+    { name: 'keywords', content: 'how it works, sushi booking process, private sushi chef, omakase, bento pickup' },
   ];
 };
 

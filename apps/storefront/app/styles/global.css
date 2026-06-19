@@ -4,39 +4,40 @@
 
 @layer base {
   :root {
-    --color-primary-50: 248 250 252;
-    --color-primary-100: 241 245 249;
-    --color-primary-200: 226 232 240;
-    --color-primary-300: 203 213 225;
-    --color-primary-400: 148 163 184;
-    --color-primary-500: 100 116 139;
-    --color-primary-600: 71 85 105;
-    --color-primary-700: 51 65 85;
-    --color-primary-800: 30 41 59;
-    --color-primary-900: 15 23 42;
-    --color-primary-DEFAULT: 15 23 42;
-    --color-accent-50: 93 106 81;
-    --color-accent-100: 105 122 93;
-    --color-accent-200: 117 138 105;
-    --color-accent-300: 129 154 117;
-    --color-accent-400: 141 170 129;
-    --color-accent-500: 153 186 141;
-    --color-accent-600: 165 202 153;
-    --color-accent-700: 177 218 165;
-    --color-accent-800: 189 234 177;
-    --color-accent-900: 193 210 181;
-    --color-accent-DEFAULT: 193 210 181;
-    --color-highlight-50: 255 251 245;
-    --color-highlight-100: 248 249 241;
-    --color-highlight-200: 244 247 235;
-    --color-highlight-300: 240 245 229;
-    --color-highlight-400: 236 243 223;
-    --color-highlight-500: 232 241 217;
-    --color-highlight-600: 228 239 211;
-    --color-highlight-700: 224 237 205;
-    --color-highlight-800: 220 235 199;
-    --color-highlight-900: 243 234 209;
-    --color-highlight-DEFAULT: 243 234 209;
+    /* SDOA brand palette */
+    --color-primary-50: 246 246 246;
+    --color-primary-100: 229 231 235;
+    --color-primary-200: 209 213 219;
+    --color-primary-300: 156 163 175;
+    --color-primary-400: 107 114 128;
+    --color-primary-500: 75 85 99;
+    --color-primary-600: 55 65 81;
+    --color-primary-700: 28 28 31;
+    --color-primary-800: 11 11 11;
+    --color-primary-900: 0 0 0;
+    --color-primary-DEFAULT: 11 11 11;
+    --color-accent-50: 251 247 233;
+    --color-accent-100: 247 239 211;
+    --color-accent-200: 239 224 168;
+    --color-accent-300: 231 208 124;
+    --color-accent-400: 223 192 81;
+    --color-accent-500: 212 175 55;
+    --color-accent-600: 184 150 46;
+    --color-accent-700: 154 125 38;
+    --color-accent-800: 124 100 30;
+    --color-accent-900: 94 75 22;
+    --color-accent-DEFAULT: 212 175 55;
+    --color-highlight-50: 255 245 240;
+    --color-highlight-100: 255 235 224;
+    --color-highlight-200: 255 215 194;
+    --color-highlight-300: 255 195 163;
+    --color-highlight-400: 255 175 133;
+    --color-highlight-500: 255 154 118;
+    --color-highlight-600: 255 122 77;
+    --color-highlight-700: 255 90 36;
+    --color-highlight-800: 250 58 0;
+    --color-highlight-900: 199 46 0;
+    --color-highlight-DEFAULT: 255 154 118;
     --font-display: 'Sen', ui-serif, Georgia, Cambria, 'Times New Roman', Times,
       serif;
     --font-body: Sen, ui-sans-serif, system-ui, -apple-system,

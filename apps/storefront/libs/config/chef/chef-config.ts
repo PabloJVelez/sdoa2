@@ -49,53 +49,52 @@ export interface ChefConfig {
  */
 export const chefConfig: ChefConfig = {
   // Basic Information
-  name: 'Your Chef',
-  displayName: 'Your Culinary Storefront',
-  tagline: 'A DEMO FOR PRIVATE CHEFS',
+  name: 'SDOA',
+  displayName: 'Sushi Delivery of Austin',
+  tagline: 'Premium Sushi Experiences',
 
   // Biography
   bio: {
     short:
-      'A private chef specializing in premium at-home culinary experiences: cooking classes, plated dinners, buffet-style events, and more.',
+      "Austin's premier sushi experience — from artisanal bento boxes for pickup to intimate omakase dinners in your home.",
     long: [
-      'With years of culinary experience, our chef has honed their craft under renowned culinary experts. As a dedicated private chef, they create exquisite dining experiences for discerning clients who value exceptional cuisine.',
-      'Their dedication to the culinary arts is evident in their mastery of various cooking techniques and deep understanding of culinary concepts. They bring a passion for food that transcends the ordinary, always seeking to educate and inspire those around them.',
-      'Ready to showcase culinary expertise: not just cooking, but creating memorable experiences. Plan your next culinary journey and indulge in flavors that will delight your palate.',
+      "Sushi Delivery of Austin was born from a simple belief: exceptional sushi shouldn't be confined to restaurant walls. What started as a passion project has grown into Austin's premier private sushi experience.",
+      "Every roll, every slice of sashimi, every bento box is crafted with the same meticulous attention to detail you'd expect from a high-end omakase counter — but delivered directly to your home or prepared fresh in your kitchen.",
+      'From intimate dinners for two to celebrations with friends and family, SDOA brings the artistry of Japanese cuisine to your most meaningful moments.',
     ],
-    subtitle: 'Culinary Excellence',
+    subtitle: 'Passion, Precision & Fresh Fish',
   },
 
   // Experience & Credentials
   credentials: {
-    yearsExperience: '15+ years',
-    specialization: 'Contemporary cuisine with seasonal ingredients',
-    highlights: ['Professional Training', 'Seasonal Sourcing', 'Custom Menus'],
+    yearsExperience: '10+ years',
+    specialization: 'Traditional and contemporary Japanese cuisine',
+    highlights: ['Fresh Daily Ingredients', 'Austin-Based', 'Private Experiences'],
   },
 
-  // Hero Section (demo copy: speaks to the chef evaluating the platform)
+  // Hero Section
   hero: {
-    tagline: 'A DEMO FOR PRIVATE CHEFS',
+    tagline: 'PREMIUM SUSHI EXPERIENCES',
     description:
-      'This is what your clients see. Showcase your menus, take event requests, and present whatever experiences you offer, from cooking classes and plated dinners to buffet events and beyond, all in one place.',
-    imageUrl:
-      'https://images.unsplash.com/photo-1556910103-1c02745aae4d?auto=format&fit=crop&w=2070&q=80',
-    imageAlt: 'Professional culinary preparation in a kitchen',
+      "From artisanal bento boxes to intimate omakase dinners — experience Austin's finest sushi, crafted with passion.",
+    imageUrl: '/assets/images/home_test.jpg',
+    imageAlt: 'Assorted sashimi trays',
   },
 
   // Meta & SEO
   seo: {
-    title: 'Private Chef Storefront Demo',
+    title: 'Sushi Delivery of Austin - Premium Sushi & Omakase Experiences',
     description:
-      'Demo storefront for private chefs. See how your menus, events, and whatever experience types you offer can be presented to clients.',
+      "Austin's premier sushi experience. Order artisanal bento boxes for pickup or book a private omakase dinner.",
     keywords: [
-      'private chef',
-      'cooking classes',
-      'plated dinner',
-      'culinary experiences',
-      'chef services',
-      'private dining',
-      'buffet style events',
-      'at-home dining',
+      'sushi austin',
+      'omakase austin',
+      'bento box austin',
+      'private sushi chef',
+      'japanese catering austin',
+      'sushi delivery austin',
+      'sushi pickup austin',
+      'private omakase austin',
     ],
   },
 };

@@ -44,6 +44,14 @@ export const footerNavigationItems: NavigationCollection = [
     sort_order: 1,
     new_tab: false,
   },
+  {
+    id: 2,
+    label: 'Order Sushi',
+    url: '/sushi',
+    location: NavigationItemLocation.footer,
+    sort_order: 2,
+    new_tab: false,
+  },
   // {
   //   id: 2,
   //   label: 'Cooking Classes',

@@ -10,7 +10,7 @@ export interface EventTypeSelectorProps {
   className?: string;
 }
 
-type LegacyWorkflowKey = 'cooking_class' | 'plated_dinner' | 'buffet_style';
+type LegacyWorkflowKey = 'cooking_class' | 'plated_dinner' | 'buffet_style' | 'meal_prep';
 
 interface FallbackExperienceType {
   id: LegacyWorkflowKey;

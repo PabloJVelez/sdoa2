@@ -31,46 +31,46 @@ interface ExperienceType {
 const experienceTypes: ExperienceType[] = [
   {
     id: 'buffet_style',
-    name: 'Buffet Style',
+    name: 'Sushi Buffet',
     price: '$99.99',
-    description: 'Perfect for larger gatherings and casual entertaining. A variety of dishes served buffet-style, allowing guests to mingle and enjoy at their own pace.',
+    description: 'Perfect for larger gatherings and casual entertaining. Fresh sushi, sashimi, and seasonal bites served buffet-style so guests can mingle and enjoy at their own pace.',
     highlights: [
-      'Multiple dishes and appetizers',
+      'Sushi, sashimi, and small bites',
       'Self-service dining style',
       'Great for mingling',
       'Flexible timing'
     ],
-    icon: '/assets/images/buffet.jpg',
+    icon: '/assets/images/IMG_2693.jpg',
     idealFor: 'Birthday parties, family gatherings, casual celebrations',
     duration: '2.5 hours'
   },
   {
     id: 'cooking_class',
-    name: 'Cooking Class',
+    name: 'Bento Box Pickup',
     price: '$119.99',
-    description: 'An interactive culinary experience where you learn professional techniques while preparing a delicious meal together.',
+    description: 'Beautifully composed sushi bento boxes made with premium fish and fresh ingredients, ready for pickup and perfect for lunch, events, or easy entertaining.',
     highlights: [
-      'Hands-on cooking instruction',
-      'Learn professional techniques',
-      'Interactive experience',
-      'Take home new skills'
+      'Fresh daily ingredients',
+      'Chef-composed boxes',
+      'Easy pickup experience',
+      'Great for groups'
     ],
-    icon: '/assets/images/cooking_class.jpg',
-    idealFor: 'Date nights, team building, skill development',
-    duration: '3 hours'
+    icon: '/assets/images/IMG_2694.jpg',
+    idealFor: 'Office lunches, casual events, at-home sushi cravings',
+    duration: 'Pickup window'
   },
   {
     id: 'plated_dinner',
-    name: 'Plated Dinner',
+    name: 'Private Omakase',
     price: '$149.99',
-    description: 'An elegant, restaurant-quality dining experience with multiple courses served individually. Perfect for special occasions.',
+    description: 'An intimate omakase-style dinner prepared in your home with multiple courses, premium ingredients, and careful attention to each guest.',
     highlights: [
-      'Multi-course tasting menu',
-      'Restaurant-quality presentation',
+      'Multi-course sushi tasting',
+      'Premium fish selection',
       'Full-service dining',
-      'Premium ingredients'
+      'Traditional techniques'
     ],
-    icon: '/assets/images/plated_dinner.jpg',
+    icon: '/assets/images/IMG_2695.jpg',
     idealFor: 'Anniversaries, proposals, formal celebrations',
     duration: '4 hours'
   }
@@ -112,8 +112,8 @@ const ExperienceCard: FC<ExperienceCardProps> = ({ experience, className, featur
             height={128}
             className="w-full h-full object-cover"
             fallbackSrc={[
-              'https://images.unsplash.com/photo-1507048331197-7d4ac70811cf?auto=format&fit=crop&w=800&q=80',
-              'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80',
+              '/assets/images/IMG_2697.jpg',
+              '/assets/images/book_sdoa_experience.jpg',
             ]}
           />
         </div>
@@ -229,8 +229,8 @@ const ExperienceAccordionItem: FC<ExperienceAccordionItemProps> = ({
                 height={160}
                 className="w-full h-full object-cover"
                 fallbackSrc={[
-                  'https://images.unsplash.com/photo-1507048331197-7d4ac70811cf?auto=format&fit=crop&w=800&q=80',
-                  'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80',
+                  '/assets/images/IMG_2697.jpg',
+                  '/assets/images/book_sdoa_experience.jpg',
                 ]}
               />
             </div>
@@ -307,6 +307,17 @@ const ExperienceAccordionItem: FC<ExperienceAccordionItemProps> = ({
 };
 
 function mapApiToLocal(apiTypes: StoreExperienceTypeDTO[]): ExperienceType[] {
+  const fallbackImages: Record<string, string> = {
+    buffet_style: '/assets/images/IMG_2693.jpg',
+    buffet: '/assets/images/IMG_2693.jpg',
+    pickup: '/assets/images/IMG_2694.jpg',
+    bento: '/assets/images/IMG_2694.jpg',
+    bento_box: '/assets/images/IMG_2694.jpg',
+    cooking_class: '/assets/images/IMG_2694.jpg',
+    plated_dinner: '/assets/images/IMG_2695.jpg',
+    omakase: '/assets/images/IMG_2695.jpg',
+  };
+
   return apiTypes
     .filter((t) => t.is_active)
     .map((t) => {
@@ -320,7 +331,7 @@ function mapApiToLocal(apiTypes: StoreExperienceTypeDTO[]): ExperienceType[] {
       price: t.price_per_unit ? `$${(Number(t.price_per_unit) / 100).toFixed(2)}` : '',
       description: t.description ?? '',
       highlights: t.highlights ?? [],
-      icon: t.image_url ?? '',
+      icon: t.image_url ?? fallbackImages[id] ?? fallbackImages[t.slug] ?? '/assets/images/IMG_2697.jpg',
       idealFor: t.ideal_for ?? '',
       duration: t.duration_display ?? '',
     };
@@ -330,8 +341,8 @@ function mapApiToLocal(apiTypes: StoreExperienceTypeDTO[]): ExperienceType[] {
 export const ExperienceTypes: FC<ExperienceTypesProps> = ({ 
   className,
   apiExperienceTypes = [],
-  title = "Culinary Experiences",
-  description = "Each experience is carefully crafted to match the occasion. All prices are per person with no hidden fees or deposits required."
+  title = "Sushi Experiences",
+  description = "Each experience is carefully crafted to match the occasion, from bento boxes for pickup to intimate omakase dinners at home."
 }) => {
   const displayTypes = apiExperienceTypes.length > 0
     ? mapApiToLocal(apiExperienceTypes)
@@ -349,7 +360,7 @@ export const ExperienceTypes: FC<ExperienceTypesProps> = ({
         </p>
         {/* Mobile-friendly helper line to match design intent */}
         <p className="lg:hidden text-primary-600 text-xl">
-          Tap to explore • All prices per person
+          Tap to explore available sushi experiences
         </p>
       </div>
 
