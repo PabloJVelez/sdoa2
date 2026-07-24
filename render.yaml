@@ -106,8 +106,6 @@
 #         sync: false
 #       - key: STRIPE_PUBLIC_KEY
 #         sync: false
-#       - key: STRIPE_SECRET_KEY
-#         sync: false
 
 #     buildFilter:
 #       paths:
