@@ -95,7 +95,6 @@ You can view a live demo of the project [here](https://barrio.lambdacurry.dev/).
 
    - `MEDUSA_PUBLISHABLE_KEY` # API key from previous step
    - `STRIPE_PUBLIC_KEY` # starts with `pk_`
-   - `STRIPE_SECRET_KEY` # starts with `sk_`
 
 7. Restart your storefront and medusa backend:
       ```
