@@ -34,7 +34,7 @@ export function resolveChefBrandContact(): {
 } {
   return {
     name: process.env.CHEF_CONTACT_NAME ?? "Chef",
-    email: process.env.CHEF_CONTACT_EMAIL ?? "support@example.com",
+    email: process.env.CHEF_CONTACT_EMAIL ?? "pmltechpile@gmail.com",
     phone: process.env.CHEF_CONTACT_PHONE ?? "",
   }
 }

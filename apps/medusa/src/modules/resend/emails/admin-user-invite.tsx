@@ -88,7 +88,7 @@ AdminUserInviteEmailComponent.PreviewProps = {
   expiresAt: "Aug 1, 2026",
   chef: {
     name: "Sushidoa",
-    email: "support@example.com",
+    email: "pmltechpile@gmail.com",
     phone: "",
   },
 } satisfies AdminUserInviteEmailProps
