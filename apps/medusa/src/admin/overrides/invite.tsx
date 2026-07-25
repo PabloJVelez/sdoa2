@@ -10,7 +10,6 @@ import loginBrandMarkUrl from "../../assets/chefhat.jpg"
 import { Form } from "~dashboard/components/common/form"
 import {
   useAcceptInvite,
-  useSignInWithEmailPass,
   useSignUpWithEmailPass,
 } from "~dashboard/hooks/api"
 import { isFetchError } from "~dashboard/lib/is-fetch-error"
@@ -56,6 +55,27 @@ function isExistingIdentityError(error: unknown) {
 
 function authTokenFromResult(result: string | { location: string }) {
   return typeof result === "string" ? result : undefined
+}
+
+async function signInEmailPassForInvite(email: string, password: string) {
+  const response = await fetch("/auth/user/emailpass", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ email, password }),
+  })
+
+  const result = (await response.json().catch(() => null)) as {
+    token?: string
+    message?: string
+  } | null
+
+  if (!response.ok || !result?.token) {
+    throw new Error(result?.message ?? "Unauthorized")
+  }
+
+  return result.token
 }
 
 export const Invite = () => {
@@ -147,8 +167,6 @@ const CreateView = ({
 
   const { mutateAsync: signUpEmailPass, isPending: isCreatingAuthUser } =
     useSignUpWithEmailPass()
-  const { mutateAsync: signInEmailPass, isPending: isSigningIn } =
-    useSignInWithEmailPass()
   const { mutateAsync: acceptInvite, isPending: isAcceptingInvite } =
     useAcceptInvite(token)
 
@@ -168,12 +186,7 @@ const CreateView = ({
           throw error
         }
 
-        authToken = authTokenFromResult(
-          await signInEmailPass({
-            email: data.email,
-            password: data.password,
-          }),
-        )
+        authToken = await signInEmailPassForInvite(data.email, data.password)
       }
 
       if (!authToken) {
@@ -329,7 +342,7 @@ const CreateView = ({
           <Button
             className="w-full"
             type="submit"
-            isLoading={isCreatingAuthUser || isSigningIn || isAcceptingInvite}
+            isLoading={isCreatingAuthUser || isAcceptingInvite}
           >
             Create account
           </Button>
