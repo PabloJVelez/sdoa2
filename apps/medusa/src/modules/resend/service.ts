@@ -28,6 +28,7 @@ enum Templates {
   CHEF_EVENT_ACCEPTED = "chef-event-accepted",
   CHEF_EVENT_REJECTED = "chef-event-rejected",
   EVENT_DETAILS_RESEND = "event-details-resend",
+  ADMIN_USER_INVITE = "admin-user-invite",
   RECEIPT = "receipt",
   SUSHI_ORDER_REQUEST_CREATED = "sushi-order-request-created",
   SUSHI_ORDER_REQUEST_CONFIRMED = "sushi-order-request-confirmed",
@@ -40,6 +41,7 @@ import { chefEventRequestedEmail } from "./emails/chef-event-requested"
 import { chefEventAcceptedEmail } from "./emails/chef-event-accepted"
 import { chefEventRejectedEmail } from "./emails/chef-event-rejected"
 import { eventDetailsResendEmail } from "./emails/event-details-resend"
+import { adminUserInviteEmail } from "./emails/admin-user-invite"
 import { receiptEmail } from "./emails/receipt"
 import { sushiOrderRequestCreatedEmail } from "./emails/sushi-order-request-created"
 import { sushiOrderRequestConfirmedEmail } from "./emails/sushi-order-request-confirmed"
@@ -51,6 +53,7 @@ const templates: {[key in Templates]?: (props: any) => React.ReactNode} = {
   [Templates.CHEF_EVENT_ACCEPTED]: chefEventAcceptedEmail,
   [Templates.CHEF_EVENT_REJECTED]: chefEventRejectedEmail,
   [Templates.EVENT_DETAILS_RESEND]: eventDetailsResendEmail,
+  [Templates.ADMIN_USER_INVITE]: adminUserInviteEmail,
   [Templates.RECEIPT]: receiptEmail,
   [Templates.SUSHI_ORDER_REQUEST_CREATED]: sushiOrderRequestCreatedEmail,
   [Templates.SUSHI_ORDER_REQUEST_CONFIRMED]: sushiOrderRequestConfirmedEmail,
@@ -116,6 +119,8 @@ class ResendNotificationProviderService extends AbstractNotificationProviderServ
         return "Chef Event Update"
       case Templates.EVENT_DETAILS_RESEND:
         return "📧 Event Details Reminder"
+      case Templates.ADMIN_USER_INVITE:
+        return "You're invited to Sushidoa Admin"
       case Templates.RECEIPT:
         return "Your event receipt"
       case Templates.SUSHI_ORDER_REQUEST_CREATED:
@@ -173,4 +178,4 @@ class ResendNotificationProviderService extends AbstractNotificationProviderServ
   }
 }
 
-export default ResendNotificationProviderService 
+export default ResendNotificationProviderService
