@@ -22,9 +22,13 @@ function resolveAdminInviteBaseUrl() {
   const base =
     process.env.MEDUSA_ADMIN_URL ??
     process.env.ADMIN_BACKEND_URL ??
-    "http://localhost:9000"
+    "http://localhost:9000/app"
 
-  return base.replace(/\/+$/, "").replace(/\/app$/, "")
+  const normalizedBase = base.replace(/\/+$/, "")
+
+  return normalizedBase.endsWith("/app")
+    ? normalizedBase
+    : `${normalizedBase}/app`
 }
 
 function formatExpiresAt(value: InviteDTO["expires_at"]) {
@@ -47,7 +51,7 @@ async function retrieveInvite(container: SubscriberArgs["container"], id: string
 export default async function adminUserInviteHandler({
   event: { data, name },
   container,
-}: SubscriberArgs<InviteEventItem[]>) {
+}: SubscriberArgs<InviteEventItem | InviteEventItem[]>) {
   const notificationService = container.resolve(Modules.NOTIFICATION)
   const logger = container.resolve(ContainerRegistrationKeys.LOGGER)
   const chef = {
@@ -55,9 +59,10 @@ export default async function adminUserInviteHandler({
     name: process.env.CHEF_CONTACT_NAME ?? "Sushidoa",
   }
   const inviteBaseUrl = resolveAdminInviteBaseUrl()
+  const inviteEvents = Array.isArray(data) ? data : [data]
 
   await Promise.all(
-    data.map(async ({ id }) => {
+    inviteEvents.map(async ({ id }) => {
       try {
         const invite = await retrieveInvite(container, id)
         const inviteUrl = `${inviteBaseUrl}/invite?token=${encodeURIComponent(invite.token)}`
