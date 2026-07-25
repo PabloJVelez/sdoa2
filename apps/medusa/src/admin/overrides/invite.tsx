@@ -8,11 +8,6 @@ import * as z from "zod"
 
 import loginBrandMarkUrl from "../../assets/chefhat.jpg"
 import { Form } from "~dashboard/components/common/form"
-import {
-  useAcceptInvite,
-  useSignUpWithEmailPass,
-} from "~dashboard/hooks/api"
-import { isFetchError } from "~dashboard/lib/is-fetch-error"
 
 const DOC_TITLE = "Sushidoa Admin"
 
@@ -44,38 +39,97 @@ type DecodedInvite = {
   email?: string
 }
 
-function isExistingIdentityError(error: unknown) {
-  if (!isFetchError(error)) return false
+class InviteRequestError extends Error {
+  status: number
 
+  constructor(status: number, message: string) {
+    super(message)
+    this.name = "InviteRequestError"
+    this.status = status
+  }
+}
+
+function isExistingIdentityError(error: unknown) {
   return (
+    error instanceof InviteRequestError &&
     error.status === 401 &&
     error.message.toLowerCase().includes("identity with email already exists")
   )
 }
 
-function authTokenFromResult(result: string | { location: string }) {
-  return typeof result === "string" ? result : undefined
+async function parseInviteResponse(response: Response) {
+  const result = (await response.json().catch(() => null)) as {
+    token?: string
+    message?: string
+  } | null
+
+  if (!response.ok) {
+    throw new InviteRequestError(
+      response.status,
+      result?.message ?? "Server error - Try again later.",
+    )
+  }
+
+  return result
 }
 
-async function signInEmailPassForInvite(email: string, password: string) {
-  const response = await fetch("/auth/user/emailpass", {
+async function registerEmailPassForInvite(email: string, password: string) {
+  const response = await fetch("/auth/user/emailpass/register", {
     method: "POST",
+    credentials: "omit",
     headers: {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({ email, password }),
   })
 
-  const result = (await response.json().catch(() => null)) as {
-    token?: string
-    message?: string
-  } | null
+  const result = await parseInviteResponse(response)
 
-  if (!response.ok || !result?.token) {
-    throw new Error(result?.message ?? "Unauthorized")
+  if (!result?.token) {
+    throw new Error("Unable to create an auth session for this invite.")
   }
 
   return result.token
+}
+
+async function signInEmailPassForInvite(email: string, password: string) {
+  const response = await fetch("/auth/user/emailpass", {
+    method: "POST",
+    credentials: "omit",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ email, password }),
+  })
+
+  const result = await parseInviteResponse(response)
+
+  if (!result?.token) {
+    throw new InviteRequestError(response.status, "Unauthorized")
+  }
+
+  return result.token
+}
+
+async function acceptInviteForInvite(
+  inviteToken: string,
+  authToken: string,
+  user: Pick<CreateAccountValues, "email" | "first_name" | "last_name">,
+) {
+  const response = await fetch(
+    `/admin/invites/accept?token=${encodeURIComponent(inviteToken)}`,
+    {
+      method: "POST",
+      credentials: "omit",
+      headers: {
+        Authorization: `Bearer ${authToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(user),
+    },
+  )
+
+  await parseInviteResponse(response)
 }
 
 export const Invite = () => {
@@ -164,23 +218,16 @@ const CreateView = ({
       repeat_password: "",
     },
   })
-
-  const { mutateAsync: signUpEmailPass, isPending: isCreatingAuthUser } =
-    useSignUpWithEmailPass()
-  const { mutateAsync: acceptInvite, isPending: isAcceptingInvite } =
-    useAcceptInvite(token)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleSubmit = form.handleSubmit(async (data) => {
+    setIsSubmitting(true)
+
     try {
       let authToken: string | undefined
 
       try {
-        authToken = authTokenFromResult(
-          await signUpEmailPass({
-            email: data.email,
-            password: data.password,
-          }),
-        )
+        authToken = await registerEmailPassForInvite(data.email, data.password)
       } catch (error) {
         if (!isExistingIdentityError(error)) {
           throw error
@@ -193,17 +240,28 @@ const CreateView = ({
         throw new Error("Unable to create an auth session for this invite.")
       }
 
-      await acceptInvite({
+      await acceptInviteForInvite(token, authToken, {
         email: data.email,
         first_name: data.first_name,
         last_name: data.last_name,
-        auth_token: authToken,
       })
 
       toast.success("Invite accepted")
       onSuccess()
     } catch (error) {
-      if (isFetchError(error) && error.status === 400) {
+      if (
+        error instanceof InviteRequestError &&
+        error.status === 400 &&
+        error.message.toLowerCase().includes("already authenticated")
+      ) {
+        form.setError("root", {
+          type: "manual",
+          message: "This account already exists. Sign in from the login page.",
+        })
+        return
+      }
+
+      if (error instanceof InviteRequestError && error.status === 400) {
         form.setError("root", {
           type: "manual",
           message: "This invite is invalid or has expired.",
@@ -218,6 +276,8 @@ const CreateView = ({
         type: "manual",
         message,
       })
+    } finally {
+      setIsSubmitting(false)
     }
   })
 
@@ -342,7 +402,7 @@ const CreateView = ({
           <Button
             className="w-full"
             type="submit"
-            isLoading={isCreatingAuthUser || isAcceptingInvite}
+            isLoading={isSubmitting}
           >
             Create account
           </Button>
