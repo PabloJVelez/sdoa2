@@ -1,12 +1,12 @@
-import { ScrollArrowButtons } from '@app/components/common/buttons/ScrollArrowButtons';
-import { useScrollArrows } from '@app/hooks/useScrollArrows';
-import type { StoreMenuDTO } from '@libs/util/server/data/menus.server';
-import clsx from 'clsx';
-import { type FC, memo, useEffect } from 'react';
-import { NavLink } from 'react-router';
-import { MenuGridSkeleton } from './MenuGridSkeleton';
-import type { MenuListItemProps } from './MenuListItem';
-import { MenuListItem } from './MenuListItem';
+import { ScrollArrowButtons } from "@app/components/common/buttons/ScrollArrowButtons";
+import { useScrollArrows } from "@app/hooks/useScrollArrows";
+import type { StoreMenuDTO } from "@libs/util/server/data/menus.server";
+import clsx from "clsx";
+import { type FC, memo, useEffect } from "react";
+import { NavLink } from "react-router";
+import { MenuGridSkeleton } from "./MenuGridSkeleton";
+import type { MenuListItemProps } from "./MenuListItem";
+import { MenuListItem } from "./MenuListItem";
 
 export interface MenuCarouselProps {
   menus?: StoreMenuDTO[];
@@ -17,7 +17,11 @@ export interface MenuCarouselProps {
   showArrows?: boolean; // Show prev/next arrow buttons
 }
 
-export const MenuRow: FC<{ menus: StoreMenuDTO[]; singleItem?: boolean; renderItem?: FC<MenuListItemProps> }> = memo(({ menus, singleItem, renderItem }) => {
+export const MenuRow: FC<{
+  menus: StoreMenuDTO[];
+  singleItem?: boolean;
+  renderItem?: FC<MenuListItemProps>;
+}> = memo(({ menus, singleItem, renderItem }) => {
   return (
     <>
       {menus.map((menu) => (
@@ -26,16 +30,20 @@ export const MenuRow: FC<{ menus: StoreMenuDTO[]; singleItem?: boolean; renderIt
           data-card
           // Widths tuned to match grid steps while enabling snap scrolling
           className={clsx(
-            'inline-block snap-center last:mr-0',
+            "inline-block snap-center last:mr-0",
             singleItem
-              ? 'w-full mr-4 xs:w-full sm:w-full'
-              : 'w-[90%] mr-4 xs:w-[85%] sm:w-[70%] sm:mr-6 md:w-[48%] xl:w-[31%] xl:mr-8'
+              ? "w-full mr-4 xs:w-full sm:w-full"
+              : "w-[90%] mr-4 xs:w-[85%] sm:w-[70%] sm:mr-6 md:w-[48%] xl:w-[31%] xl:mr-8"
           )}
         >
           {renderItem ? (
             renderItem({ menu })
           ) : (
-            <NavLink prefetch="viewport" to={`/menus/${menu.id}`} viewTransition>
+            <NavLink
+              prefetch="viewport"
+              to={`/menus/${menu.id}`}
+              viewTransition
+            >
               {({ isTransitioning }) => (
                 <MenuListItem isTransitioning={isTransitioning} menu={menu} />
               )}
@@ -48,7 +56,14 @@ export const MenuRow: FC<{ menus: StoreMenuDTO[]; singleItem?: boolean; renderIt
   );
 });
 
-export const MenuCarousel: FC<MenuCarouselProps> = ({ menus, className, singleItem, autoAdvanceMs, showArrows = true, renderItem }) => {
+export const MenuCarousel: FC<MenuCarouselProps> = ({
+  menus,
+  className,
+  singleItem,
+  autoAdvanceMs,
+  showArrows = true,
+  renderItem,
+}) => {
   const { scrollableDivRef, ...scrollArrowProps } = useScrollArrows({
     buffer: 100,
     resetOnDepChange: [menus],
@@ -56,10 +71,20 @@ export const MenuCarousel: FC<MenuCarouselProps> = ({ menus, className, singleIt
 
   if (!menus) return <MenuGridSkeleton />;
 
-  // Motion polish: parallax image and scale centered card
+  // Motion polish: parallax image and scale centered card. The single-card
+  // mobile carousel uses snap scrolling, so keep it visually anchored.
   useEffect(() => {
     const container = scrollableDivRef.current;
     if (!container) return;
+
+    if (singleItem) {
+      const cards = container.querySelectorAll<HTMLElement>("[data-card]");
+      cards.forEach((card) => {
+        card.style.removeProperty("--scale");
+        card.style.removeProperty("--parallax-x");
+      });
+      return;
+    }
 
     let rafId: number | null = null;
 
@@ -68,7 +93,7 @@ export const MenuCarousel: FC<MenuCarouselProps> = ({ menus, className, singleIt
       const rect = container.getBoundingClientRect();
       const containerCenter = rect.left + rect.width / 2;
 
-      const cards = container.querySelectorAll<HTMLElement>('[data-card]');
+      const cards = container.querySelectorAll<HTMLElement>("[data-card]");
       cards.forEach((card) => {
         const cardRect = card.getBoundingClientRect();
         const cardCenter = cardRect.left + cardRect.width / 2;
@@ -78,8 +103,8 @@ export const MenuCarousel: FC<MenuCarouselProps> = ({ menus, className, singleIt
         const scale = 1 + (1 - Math.min(1, Math.abs(clamped) * 2)) * 0.05; // up to +5% in center
         const parallaxX = -clamped * 24; // px
 
-        card.style.setProperty('--scale', scale.toFixed(3));
-        card.style.setProperty('--parallax-x', `${parallaxX.toFixed(1)}px`);
+        card.style.setProperty("--scale", scale.toFixed(3));
+        card.style.setProperty("--parallax-x", `${parallaxX.toFixed(1)}px`);
       });
     };
 
@@ -90,14 +115,14 @@ export const MenuCarousel: FC<MenuCarouselProps> = ({ menus, className, singleIt
     };
 
     updateMotion();
-    container.addEventListener('scroll', onScroll, { passive: true });
-    window.addEventListener('resize', onScroll, { passive: true });
+    container.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll, { passive: true });
     return () => {
-      container.removeEventListener('scroll', onScroll);
-      window.removeEventListener('resize', onScroll);
+      container.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
       if (rafId != null) cancelAnimationFrame(rafId);
     };
-  }, [menus, scrollableDivRef]);
+  }, [menus, scrollableDivRef, singleItem]);
 
   // Auto-advance between cards when requested
   useEffect(() => {
@@ -105,7 +130,8 @@ export const MenuCarousel: FC<MenuCarouselProps> = ({ menus, className, singleIt
     const container = scrollableDivRef.current;
     if (!container) return;
 
-    const getCards = () => Array.from(container.querySelectorAll<HTMLElement>('[data-card]'));
+    const getCards = () =>
+      Array.from(container.querySelectorAll<HTMLElement>("[data-card]"));
     const getOffsets = () => {
       const cRect = container.getBoundingClientRect();
       return getCards().map((card) => {
@@ -131,7 +157,7 @@ export const MenuCarousel: FC<MenuCarouselProps> = ({ menus, className, singleIt
         }
       });
       const next = (nearest + 1) % offsets.length;
-      container.scrollTo({ left: offsets[next], behavior: 'smooth' });
+      container.scrollTo({ left: offsets[next], behavior: "smooth" });
     };
 
     const start = () => {
@@ -145,35 +171,41 @@ export const MenuCarousel: FC<MenuCarouselProps> = ({ menus, className, singleIt
     };
 
     // Pause on user interaction per UX best practices
-    container.addEventListener('pointerdown', stop, { passive: true });
-    container.addEventListener('pointerenter', stop, { passive: true });
-    container.addEventListener('touchstart', stop, { passive: true });
-    container.addEventListener('pointerleave', start, { passive: true });
+    container.addEventListener("pointerdown", stop, { passive: true });
+    container.addEventListener("pointerenter", stop, { passive: true });
+    container.addEventListener("touchstart", stop, { passive: true });
+    container.addEventListener("pointerleave", start, { passive: true });
 
     start();
     return () => {
       stop();
-      container.removeEventListener('pointerdown', stop);
-      container.removeEventListener('pointerenter', stop);
-      container.removeEventListener('touchstart', stop);
-      container.removeEventListener('pointerleave', start);
+      container.removeEventListener("pointerdown", stop);
+      container.removeEventListener("pointerenter", stop);
+      container.removeEventListener("touchstart", stop);
+      container.removeEventListener("pointerleave", start);
     };
   }, [autoAdvanceMs, menus, scrollableDivRef]);
 
   return (
-    <div className={clsx('menu-carousel relative', className)}>
+    <div className={clsx("menu-carousel relative", className)}>
       <div
         ref={scrollableDivRef}
         className={clsx(
-          'w-full snap-x snap-mandatory overflow-x-auto whitespace-nowrap pb-2 sm:snap-proximity text-center no-scrollbar',
-          singleItem && 'px-4'
+          "w-full snap-x snap-mandatory overflow-x-auto whitespace-nowrap pb-2 sm:snap-proximity text-center no-scrollbar",
+          singleItem && "px-4"
         )}
       >
-        <MenuRow menus={menus} singleItem={singleItem} renderItem={renderItem} />
+        <MenuRow
+          menus={menus}
+          singleItem={singleItem}
+          renderItem={renderItem}
+        />
       </div>
-      {showArrows && <ScrollArrowButtons className="-mt-12" {...scrollArrowProps} />}
+      {showArrows && (
+        <ScrollArrowButtons className="-mt-12" {...scrollArrowProps} />
+      )}
     </div>
   );
 };
 
-export default MenuCarousel; 
+export default MenuCarousel;
