@@ -20,7 +20,7 @@ interface ExperienceTypeSeedRow {
   max_party_size: number | null;
 }
 
-const defaultExperienceTypes: ExperienceTypeSeedRow[] = [
+export const defaultExperienceTypes: ExperienceTypeSeedRow[] = [
   {
     name: 'Buffet Style',
     slug: 'buffet-style',
@@ -28,7 +28,7 @@ const defaultExperienceTypes: ExperienceTypeSeedRow[] = [
       'Perfect for larger gatherings and casual entertaining. A variety of dishes served buffet-style, allowing guests to mingle and enjoy at their own pace.',
     short_description: 'Casual entertaining with variety',
     icon: '🥘',
-    image_url: '/assets/images/buffet.jpg',
+    image_url: '/assets/images/book_sdoa_experience.jpg',
     highlights: [
       'Multiple dishes and appetizers',
       'Self-service dining style',
@@ -53,7 +53,7 @@ const defaultExperienceTypes: ExperienceTypeSeedRow[] = [
       'An interactive culinary experience where you learn professional techniques while preparing a delicious meal together.',
     short_description: 'Interactive hands-on cooking',
     icon: '👨‍🍳',
-    image_url: '/assets/images/cooking_class.jpg',
+    image_url: '/assets/images/chef_scallops_home.jpg',
     highlights: [
       'Hands-on cooking instruction',
       'Learn professional techniques',
@@ -78,7 +78,7 @@ const defaultExperienceTypes: ExperienceTypeSeedRow[] = [
       'An elegant, restaurant-quality dining experience with multiple courses served individually. Perfect for special occasions.',
     short_description: 'Elegant multi-course dining',
     icon: '🍽️',
-    image_url: '/assets/images/plated_dinner.jpg',
+    image_url: '/assets/images/IMG_2697.jpg',
     highlights: [
       'Multi-course tasting menu',
       'Restaurant-quality presentation',
@@ -103,7 +103,7 @@ const defaultExperienceTypes: ExperienceTypeSeedRow[] = [
       'Batch-prepared meals for your household—portioning, labeling, and reheating guidance so you can eat well all week without daily cooking.',
     short_description: 'Weekly meals, chef-prepared',
     icon: '🥗',
-    image_url: '/assets/images/meal_prep.jpg',
+    image_url: '/assets/images/IMG_2694.jpg',
     highlights: [
       'Menus aligned to dietary preferences',
       'Portioned and ready to refrigerate or freeze',
@@ -123,14 +123,21 @@ const defaultExperienceTypes: ExperienceTypeSeedRow[] = [
   },
 ];
 
-export async function seedExperienceTypes(
-  svc: ExperienceTypeModuleService,
-): Promise<void> {
+export async function seedExperienceTypes(svc: ExperienceTypeModuleService): Promise<void> {
   const existing = await svc.listExperienceTypes({});
   const existingSlugs = new Set(existing.map((e: { slug: string }) => e.slug));
 
   for (const row of defaultExperienceTypes) {
-    if (existingSlugs.has(row.slug)) continue;
+    const existingRow = existing.find((e: { slug: string }) => e.slug === row.slug);
+    if (existingRow) {
+      if ((existingRow as { image_url?: string | null }).image_url !== row.image_url) {
+        await svc.updateExperienceTypes({
+          id: (existingRow as { id: string }).id,
+          image_url: row.image_url,
+        } as any);
+      }
+      continue;
+    }
     await svc.createExperienceTypes(row as any);
   }
 }
