@@ -21,10 +21,7 @@ import {
 import { createCollectionsWorkflow } from '@medusajs/medusa/core-flows';
 import type { ExecArgs } from '@medusajs/types';
 import { ContainerRegistrationKeys, Modules } from '@medusajs/framework/utils';
-import {
-  seedMenuEntities,
-  seedMenuProductsUsd,
-} from './seed/chef-experiences';
+import { seedMenuEntities, seedMenuProductsUsd } from './seed/chef-experiences';
 import { seedExperienceTypes } from './seed/experience-types';
 import { MENU_MODULE } from '../modules/menu';
 import { EXPERIENCE_TYPE_MODULE } from '../modules/experience-type';
@@ -32,6 +29,7 @@ import type MenuModuleService from '../modules/menu/service';
 import type ExperienceTypeModuleService from '../modules/experience-type/service';
 import ensureSystemChargeProduct from './ensure-system-charge-product';
 import ensureSushiDeliveryFeeProduct from './ensure-sushi-delivery-fee-product';
+import ensureSushiBundleProducts from './ensure-sushi-bundle-products';
 
 export default async function init({ container }: ExecArgs) {
   const logger = container.resolve(ContainerRegistrationKeys.LOGGER);
@@ -41,9 +39,7 @@ export default async function init({ container }: ExecArgs) {
   logger.info('Starting init: seed (US-only, chef experiences)...');
   const [store] = await storeModuleService.listStores();
 
-  const { result: salesChannelResult } = await createSalesChannelsWorkflow(
-    container,
-  ).run({
+  const { result: salesChannelResult } = await createSalesChannelsWorkflow(container).run({
     input: {
       salesChannelsData: [{ name: 'Default Sales Channel' }],
     },
@@ -80,23 +76,22 @@ export default async function init({ container }: ExecArgs) {
     input: [{ country_code: 'us' }],
   });
 
-  const { result: stockLocationResult } =
-    await createStockLocationsWorkflow(container).run({
-      input: {
-        locations: [
-          {
-            name: 'Main Warehouse',
-            address: {
-              address_1: '123 Main Street',
-              city: 'New York',
-              country_code: 'US',
-              province: 'NY',
-              postal_code: '10001',
-            },
+  const { result: stockLocationResult } = await createStockLocationsWorkflow(container).run({
+    input: {
+      locations: [
+        {
+          name: 'Main Warehouse',
+          address: {
+            address_1: '123 Main Street',
+            city: 'New York',
+            country_code: 'US',
+            province: 'NY',
+            postal_code: '10001',
           },
-        ],
-      },
-    });
+        },
+      ],
+    },
+  });
   const stockLocation = stockLocationResult[0];
 
   await remoteLink.create([
@@ -106,30 +101,27 @@ export default async function init({ container }: ExecArgs) {
     },
   ]);
 
-  const { result: shippingProfileResult } =
-    await createShippingProfilesWorkflow(container).run({
-      input: {
-        data: [
-          { name: 'Default', type: 'default' },
-          { name: 'Digital Products', type: 'digital' },
-        ],
-      },
-    });
+  const { result: shippingProfileResult } = await createShippingProfilesWorkflow(container).run({
+    input: {
+      data: [
+        { name: 'Default', type: 'default' },
+        { name: 'Digital Products', type: 'digital' },
+      ],
+    },
+  });
   const shippingProfile = shippingProfileResult[0];
   const digitalShippingProfile = shippingProfileResult[1];
 
-  const fulfillmentResult = await container
-    .resolve(Modules.FULFILLMENT)
-    .createFulfillmentSets({
-      name: 'US Delivery',
-      type: 'shipping',
-      service_zones: [
-        {
-          name: 'United States',
-          geo_zones: [{ country_code: 'us', type: 'country' }],
-        },
-      ],
-    });
+  const fulfillmentResult = await container.resolve(Modules.FULFILLMENT).createFulfillmentSets({
+    name: 'US Delivery',
+    type: 'shipping',
+    service_zones: [
+      {
+        name: 'United States',
+        geo_zones: [{ country_code: 'us', type: 'country' }],
+      },
+    ],
+  });
   const fulfillmentSet = Array.isArray(fulfillmentResult)
     ? fulfillmentResult[0]
     : (fulfillmentResult as { id: string; service_zones?: { id: string }[] });
@@ -225,23 +217,22 @@ export default async function init({ container }: ExecArgs) {
     ],
   });
 
-  const { result: digitalLocationResult } =
-    await createStockLocationsWorkflow(container).run({
-      input: {
-        locations: [
-          {
-            name: 'Digital Location',
-            address: {
-              address_1: 'Digital Product Location',
-              city: 'Digital',
-              country_code: 'US',
-              province: 'Digital',
-              postal_code: '00000',
-            },
+  const { result: digitalLocationResult } = await createStockLocationsWorkflow(container).run({
+    input: {
+      locations: [
+        {
+          name: 'Digital Location',
+          address: {
+            address_1: 'Digital Product Location',
+            city: 'Digital',
+            country_code: 'US',
+            province: 'Digital',
+            postal_code: '00000',
           },
-        ],
-      },
-    });
+        },
+      ],
+    },
+  });
   const digitalLocation = digitalLocationResult[0];
 
   await linkSalesChannelsToStockLocationWorkflow(container).run({
@@ -252,9 +243,7 @@ export default async function init({ container }: ExecArgs) {
     input: { id: digitalLocation.id, add: [defaultSalesChannel.id] },
   });
 
-  const { result: collectionsResult } = await createCollectionsWorkflow(
-    container,
-  ).run({
+  const { result: collectionsResult } = await createCollectionsWorkflow(container).run({
     input: {
       collections: [
         { title: 'Chef Experiences', handle: 'chef-experiences' },
@@ -263,31 +252,23 @@ export default async function init({ container }: ExecArgs) {
     },
   });
 
-  const { result: categoryResult } = await createProductCategoriesWorkflow(
-    container,
-  ).run({
+  const { result: categoryResult } = await createProductCategoriesWorkflow(container).run({
     input: {
       product_categories: [{ name: 'Chef Experiences', is_active: true }],
     },
   });
 
-  const { result: productTagsResult } = await createProductTagsWorkflow(
-    container,
-  ).run({
+  const { result: productTagsResult } = await createProductTagsWorkflow(container).run({
     input: {
-      product_tags: [
-        { value: 'Chef Experience' },
-        { value: 'Limited Availability' },
-      ],
+      product_tags: [{ value: 'Chef Experience' }, { value: 'Limited Availability' }],
     },
   });
 
-  const { result: experienceTypeResult } =
-    await createProductTypesWorkflow(container).run({
-      input: {
-        product_types: [{ value: 'experience' }],
-      },
-    });
+  const { result: experienceTypeResult } = await createProductTypesWorkflow(container).run({
+    input: {
+      product_types: [{ value: 'experience' }],
+    },
+  });
   const experienceTypeId = experienceTypeResult[0].id;
 
   const experienceTypeSvc: ExperienceTypeModuleService = container.resolve(EXPERIENCE_TYPE_MODULE);
@@ -298,9 +279,7 @@ export default async function init({ container }: ExecArgs) {
   const createdMenus = await seedMenuEntities(menuModuleService);
   logger.info(`Created ${createdMenus.length} menus.`);
 
-  const { result: menuProductResult } = await createProductsWorkflow(
-    container,
-  ).run({
+  const { result: menuProductResult } = await createProductsWorkflow(container).run({
     input: {
       products: seedMenuProductsUsd({
         collections: collectionsResult,
@@ -325,8 +304,7 @@ export default async function init({ container }: ExecArgs) {
         },
       ]);
       const productThumbnail =
-        menuProductResult[i].thumbnail ??
-        (menuProductResult[i].images?.[0] as { url?: string } | undefined)?.url;
+        menuProductResult[i].thumbnail ?? (menuProductResult[i].images?.[0] as { url?: string } | undefined)?.url;
       if (productThumbnail) {
         await menuModuleService.updateMenus({
           id: createdMenus[i].id,
@@ -334,17 +312,13 @@ export default async function init({ container }: ExecArgs) {
         });
       }
     } catch (err) {
-      logger.warn(
-        `Failed to link menu "${createdMenus[i].name}" to product: ${err}`,
-      );
+      logger.warn(`Failed to link menu "${createdMenus[i].name}" to product: ${err}`);
     }
   }
 
   const { result: apiKeyResult } = await createApiKeysWorkflow(container).run({
     input: {
-      api_keys: [
-        { title: 'Storefront', type: 'publishable', created_by: '' },
-      ],
+      api_keys: [{ title: 'Storefront', type: 'publishable', created_by: '' }],
     },
   });
   const publishableApiKey = apiKeyResult[0];
@@ -355,6 +329,7 @@ export default async function init({ container }: ExecArgs) {
 
   await ensureSystemChargeProduct({ container });
   await ensureSushiDeliveryFeeProduct({ container });
+  await ensureSushiBundleProducts({ container });
 
   logger.info('Init complete.');
   logger.info(`PUBLISHABLE API KEY: ${publishableApiKey.token}`);
