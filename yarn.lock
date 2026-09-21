@@ -5957,14 +5957,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@medusajs/ui@npm:4.1.8-preview-20260424141248":
-  version: 4.1.8-preview-20260424141248
-  resolution: "@medusajs/ui@npm:4.1.8-preview-20260424141248"
+"@medusajs/ui@npm:4.2.4":
+  version: 4.2.4
+  resolution: "@medusajs/ui@npm:4.2.4"
   dependencies:
     "@dnd-kit/core": "npm:^6.1.0"
     "@dnd-kit/sortable": "npm:^8.0.0"
     "@dnd-kit/utilities": "npm:^3.2.2"
-    "@medusajs/icons": "npm:2.14.1-preview-20260424141248"
+    "@medusajs/icons": "npm:2.21.0"
     "@radix-ui/react-dialog": "npm:1.1.4"
     "@radix-ui/react-dismissable-layer": "npm:1.1.4"
     "@tanstack/react-table": "npm:8.20.5"
@@ -5983,7 +5983,7 @@ __metadata:
   peerDependencies:
     react: ^18.3.1
     react-dom: ^18.3.1
-  checksum: 10c0/72be75d31c7805d7daf51814b810c31b80cf42b0c67e5ba56d198607b76832c1a5576cc9b1ad9065afd7fe299d5a516ae5233175da51bbf7fb6855f840097626
+  checksum: 10c0/5098bd7e8bd979dacadd49ba7777da56cd76aee3198b7c6821f03051cad102cb138f76b818a59a40c62d10cb74bdc58a05c3653cf1a67e50cd748904a95186d8
   languageName: node
   linkType: hard
 
@@ -27780,7 +27780,7 @@ __metadata:
     "@biomejs/biome": "npm:1.9.3"
     "@hookform/resolvers": "npm:^5.1.0"
     "@medusajs/icons": "npm:2.13.5"
-    "@medusajs/ui": "npm:4.1.8-preview-20260424141248"
+    "@medusajs/ui": "npm:4.2.4"
     "@tanstack/react-query": "npm:^5.80.6"
     prettier: "npm:^3.2.5"
     radix-ui: "npm:^1.4.3"
@@ -27843,7 +27843,7 @@ __metadata:
     "@medusajs/medusa": "npm:2.7.0"
     "@medusajs/test-utils": "npm:2.7.0"
     "@medusajs/types": "npm:2.7.0"
-    "@medusajs/ui": "npm:4.1.8-preview-20260424141248"
+    "@medusajs/ui": "npm:4.2.4"
     "@mikro-orm/cli": "npm:6.4.3"
     "@mikro-orm/core": "npm:6.4.3"
     "@mikro-orm/knex": "npm:6.4.3"
