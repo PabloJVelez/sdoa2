@@ -4,6 +4,7 @@ import { Modules, ContainerRegistrationKeys } from "@medusajs/framework/utils"
 import { DateTime } from "luxon"
 import { resolveChefEventTypeEmailLabel } from "../lib/chef-event-email-display"
 import { fallbackPricePerPersonFromStrings } from "../lib/chef-event-legacy-pricing"
+import { resolveChefBrandContact } from "../lib/sushi/email-helpers"
 
 type EventData = {
   chefEventId: string
@@ -43,6 +44,7 @@ export default async function chefEventEmailResendHandler({
     const formattedTime = chefEvent.requestedTime
 
     const eventTypeLabel = await resolveChefEventTypeEmailLabel(container, chefEvent as Record<string, unknown>)
+    const chef = resolveChefBrandContact()
 
     const locationTypeMap: Record<string, string> = {
       customer_location: "at Customer's Location",
@@ -83,11 +85,7 @@ export default async function chefEventEmailResendHandler({
         title: product.title,
         purchase_url: `${process.env.STOREFRONT_URL || 'http://localhost:3000'}/products/${product.handle}`
       } : null,
-      chef: {
-        name: "Chef John Doe",
-        email: "support@example.com",
-        phone: "(347) 695-4445"
-      },
+      chef,
       requestReference: chefEvent.id.slice(0, 8).toUpperCase(),
       customNotes: data.notes,
       emailType: data.emailType

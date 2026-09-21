@@ -34,8 +34,8 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
   return {
     eventId: searchParams.get('eventId') || 'unknown',
-    supportEmail: 'support@example.com', // TODO: Update with actual support email
-    supportPhone: '(702) 349-6158',
+    supportEmail: 'support@sushidoa.com',
+    supportPhone: '(512) 468-6261',
     responseTime: '24 hours',
   };
 };

@@ -16,8 +16,8 @@ export type OrderPlacedEmailProps = {
 
 const STORE_BRAND = {
   name: "Chef John Doe",
-  email: "support@example.com",
-  phone: "(347) 695-4445",
+  email: "support@sushidoa.com",
+  phone: "(512) 468-6261",
 }
 
 function OrderPlacedEmailComponent({ order, email_banner }: OrderPlacedEmailProps) {

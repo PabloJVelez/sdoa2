@@ -7,6 +7,7 @@ import { CreateNotificationDTO } from "@medusajs/types"
 import { DateTime } from "luxon"
 import { resolveChefEventTypeEmailLabel } from "../lib/chef-event-email-display"
 import { fallbackPricePerPersonFromStrings } from "../lib/chef-event-legacy-pricing"
+import { resolveChefBrandContact } from "../lib/sushi/email-helpers"
 
 type EventData = {
   chefEventId: string
@@ -36,6 +37,7 @@ export default async function chefEventRequestedHandler({
       : fallbackPricePerPersonFromStrings(String(chefEvent.eventType), null) * chefEvent.partySize
 
     const eventTypeLabel = await resolveChefEventTypeEmailLabel(container, chefEvent as Record<string, unknown>)
+    const chef = resolveChefBrandContact()
 
     // Format the date and time for display
     const requestedDate = typeof chefEvent.requestedDate === 'string' 
@@ -93,8 +95,8 @@ export default async function chefEventRequestedHandler({
           emailType: "customer_confirmation",
         requestReference: chefEvent.id.slice(0, 8).toUpperCase(),
         chefContact: {
-          email: "support@example.com",
-          phone: "(347) 695-4445"
+          email: chef.email,
+          phone: chef.phone
         }
       }
     } as CreateNotificationDTO)
@@ -115,8 +117,8 @@ export default async function chefEventRequestedHandler({
           emailType: "chef_notification",
           requestReference: chefEvent.id.slice(0, 8).toUpperCase(),
           chefContact: {
-            email: "support@example.com",
-            phone: "(347) 695-4445"
+            email: chef.email,
+            phone: chef.phone
           }
         }
       } as CreateNotificationDTO))
@@ -139,4 +141,4 @@ export default async function chefEventRequestedHandler({
 
 export const config: SubscriberConfig = {
   event: "chef-event.requested",
-} 
+}

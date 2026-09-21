@@ -34,8 +34,11 @@ export function resolveChefBrandContact(): {
 } {
   return {
     name: process.env.CHEF_CONTACT_NAME ?? "Chef",
-    email: process.env.CHEF_CONTACT_EMAIL ?? "pmltechpile@gmail.com",
-    phone: process.env.CHEF_CONTACT_PHONE ?? "",
+    email:
+      process.env.CHEF_CONTACT_EMAIL ??
+      process.env.RESEND_FROM_EMAIL ??
+      "support@sushidoa.com",
+    phone: process.env.CHEF_CONTACT_PHONE ?? "(512) 468-6261",
   }
 }
 

@@ -4,6 +4,7 @@ import type { CreateNotificationDTO } from "@medusajs/types"
 import { DateTime } from "luxon"
 import { resolveChefEventTypeEmailLabel } from "../lib/chef-event-email-display"
 import { fallbackPricePerPersonFromStrings } from "../lib/chef-event-legacy-pricing"
+import { resolveChefBrandContact } from "../lib/sushi/email-helpers"
 
 type EventData = {
   chefEventId: string
@@ -56,6 +57,7 @@ export default async function chefEventReceiptHandler({
       : fallbackPricePerPersonFromStrings(String(chefEvent.eventType), null) * partySize
     const pricePerPerson = partySize > 0 ? totalPrice / partySize : 0
     const eventTypeLabel = await resolveChefEventTypeEmailLabel(container, chefEvent)
+    const chef = resolveChefBrandContact()
 
     const requestedDate =
       typeof chefEvent.requestedDate === "string"
@@ -99,11 +101,7 @@ export default async function chefEventReceiptHandler({
       totalPurchasedPrice: totalPrice.toFixed(2),
       tipAmount: data.tipAmount,
       tipMethod: data.tipMethod,
-      chef: {
-        name: "Chef John Doe",
-        email: "support@example.com",
-        phone: "(347) 695-4445",
-      },
+      chef,
       requestReference: String(chefEvent.id).slice(0, 8).toUpperCase(),
       receiptDate: DateTime.now().toFormat("yyyy-MM-dd"),
       customNotes: data.notes,

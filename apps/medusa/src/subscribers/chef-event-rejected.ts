@@ -6,6 +6,7 @@ import { Modules, ContainerRegistrationKeys } from "@medusajs/framework/utils"
 import { CreateNotificationDTO } from "@medusajs/types"
 import { DateTime } from "luxon"
 import { resolveChefEventTypeEmailLabel } from "../lib/chef-event-email-display"
+import { resolveChefBrandContact } from "../lib/sushi/email-helpers"
 
 type EventData = {
   chefEventId: string
@@ -38,6 +39,7 @@ export default async function chefEventRejectedHandler({
     const formattedTime = DateTime.fromFormat(chefEvent.requestedTime, 'HH:mm').toFormat('h:mm a')
 
     const eventTypeLabel = await resolveChefEventTypeEmailLabel(container, chefEvent as Record<string, unknown>)
+    const chef = resolveChefBrandContact()
 
     // Get location type label
     const locationTypeMap: Record<string, string> = {
@@ -66,11 +68,7 @@ export default async function chefEventRejectedHandler({
         reason: data.rejectionReason,
         chefNotes: chefEvent.chefNotes || "We apologize for any inconvenience this may cause."
       },
-      chef: {
-        name: "Chef John Doe",
-        email: "support@example.com",
-        phone: "(347) 695-4445"
-      }
+      chef
     }
 
     // Send rejection email to customer
@@ -96,4 +94,4 @@ export default async function chefEventRejectedHandler({
 
 export const config: SubscriberConfig = {
   event: "chef-event.rejected",
-} 
+}
