@@ -8,6 +8,7 @@ import { DateTime } from "luxon"
 import { resolveChefEventTypeEmailLabel } from "../lib/chef-event-email-display"
 import { fallbackPricePerPersonFromStrings } from "../lib/chef-event-legacy-pricing"
 import { resolveChefBrandContact } from "../lib/sushi/email-helpers"
+import { generateMagicLinkUrl } from "../modules/utils/magic-link"
 
 type EventData = {
   chefEventId: string
@@ -80,9 +81,7 @@ export default async function chefEventRequestedHandler({
         status: "Pending",
         total_price: totalPrice.toFixed(2),
         conflict: false
-      },
-      acceptUrl: `${process.env.ADMIN_BACKEND_URL}/app/chef-events/${chefEvent.id}`,
-      rejectUrl: `${process.env.ADMIN_BACKEND_URL}/app/chef-events/${chefEvent.id}`
+      }
     }
 
     // Send confirmation email to customer
@@ -100,6 +99,9 @@ export default async function chefEventRequestedHandler({
         }
       }
     } as CreateNotificationDTO)
+
+    const baseUrl = process.env.ADMIN_BACKEND_URL || process.env.MEDUSA_ADMIN_URL || "http://localhost:9000"
+    const magicLinkUrl = generateMagicLinkUrl(chefEvent.id, baseUrl)
 
     // Send notification emails to all chefs in the list
     const chefEmails = process.env.CHEF_NOTIFICATIONS_LIST?.split(',').map(email => email.trim()).filter(Boolean) || []
@@ -119,7 +121,8 @@ export default async function chefEventRequestedHandler({
           chefContact: {
             email: chef.email,
             phone: chef.phone
-          }
+          },
+          magicLinkUrl,
         }
       } as CreateNotificationDTO))
 

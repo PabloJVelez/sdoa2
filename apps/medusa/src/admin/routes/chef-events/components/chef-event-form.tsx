@@ -259,18 +259,20 @@ export const ChefEventForm = ({
 
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
-      <Tabs defaultValue="general">
-        <Tabs.List className="border-b">
-          <Tabs.Trigger value="general">General Info</Tabs.Trigger>
-          <Tabs.Trigger value="contact">Contact</Tabs.Trigger>
-          <Tabs.Trigger value="location">Location</Tabs.Trigger>
-          <Tabs.Trigger value="details">Details</Tabs.Trigger>
-          {menuTabExtra ? <Tabs.Trigger value="menu">Selected Menu</Tabs.Trigger> : null}
-        </Tabs.List>
+      <Tabs defaultValue="general" className="w-full">
+        <div className="-mx-4 overflow-x-auto border-b px-4 sm:mx-0 sm:px-0">
+          <Tabs.List className="min-w-max border-b-0">
+            <Tabs.Trigger className="whitespace-nowrap" value="general">General Info</Tabs.Trigger>
+            <Tabs.Trigger className="whitespace-nowrap" value="contact">Contact</Tabs.Trigger>
+            <Tabs.Trigger className="whitespace-nowrap" value="location">Location</Tabs.Trigger>
+            <Tabs.Trigger className="whitespace-nowrap" value="details">Details</Tabs.Trigger>
+            {menuTabExtra ? <Tabs.Trigger className="whitespace-nowrap" value="menu">Selected Menu</Tabs.Trigger> : null}
+          </Tabs.List>
+        </div>
 
         {/* General Info Tab */}
         <Tabs.Content value="general" className="space-y-4 pt-6">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <Label htmlFor="requestedDate">Event Date *</Label>
               <Input
@@ -295,7 +297,7 @@ export const ChefEventForm = ({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <Label htmlFor="partySize">Party Size *</Label>
               <Input
@@ -340,7 +342,7 @@ export const ChefEventForm = ({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <Label htmlFor="templateProductId">Initially Selected Menu</Label>
               <Select
@@ -396,7 +398,7 @@ export const ChefEventForm = ({
 
         {/* Contact Tab */}
         <Tabs.Content value="contact" className="space-y-4 pt-6">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <Label htmlFor="firstName">First Name *</Label>
               <Input
@@ -419,7 +421,7 @@ export const ChefEventForm = ({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <Label htmlFor="email">Email *</Label>
               <Input
@@ -508,7 +510,7 @@ export const ChefEventForm = ({
             )}
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
               <Label htmlFor="totalPrice">Total Price ($)</Label>
               <Input
@@ -563,7 +565,7 @@ export const ChefEventForm = ({
           ) : null}
 
           <div className="pt-4 border-t space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <Label>Additional Charges (amount in dollars)</Label>
               <Button type="button" variant="secondary" size="small" onClick={addChargeRow}>
                 Add Charge
@@ -578,7 +580,7 @@ export const ChefEventForm = ({
                   const isVoid = row.status === "void"
                   return (
                     <div key={row.id || `new-${idx}`} className="rounded-md border p-3 space-y-3">
-                      <div className="grid grid-cols-3 gap-3">
+                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                         <div>
                           <Label>Charge name</Label>
                           <Input
@@ -631,7 +633,7 @@ export const ChefEventForm = ({
                           onChange={(e) => updateChargeRow(idx, { notes: e.target.value })}
                         />
                       </div>
-                      <div className="flex items-center justify-between">
+                      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                         <p className="text-xs text-ui-fg-subtle">
                           {isPaid
                             ? "Paid rows are read-only. Name and amount cannot be changed."
@@ -662,7 +664,7 @@ export const ChefEventForm = ({
 
       {/* Form Actions */}
       {showFormActions ? (
-        <div className="flex justify-end space-x-2 pt-6 border-t">
+        <div className="flex flex-col gap-2 border-t pt-6 sm:flex-row sm:justify-end">
           {onCancel && (
             <Button 
               type="button" 
@@ -684,4 +686,4 @@ export const ChefEventForm = ({
       ) : null}
     </form>
   )
-} 
+}
