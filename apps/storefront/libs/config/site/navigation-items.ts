@@ -33,6 +33,7 @@ export const headerNavigationItems: NavigationCollection = [
     location: NavigationItemLocation.header,
     new_tab: false,
   },
+  { id: 100, label: 'Gallery', url: '/gallery', sort_order: 10, location: NavigationItemLocation.header, new_tab: false },
 ];
 
 export const footerNavigationItems: NavigationCollection = [
@@ -92,4 +93,5 @@ export const footerNavigationItems: NavigationCollection = [
   //   sort_order: 6,
   //   new_tab: false,
   // },
+  { id: 100, label: 'Gallery', url: '/gallery', sort_order: 10, location: NavigationItemLocation.footer, new_tab: false },
 ];

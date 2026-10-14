@@ -43,6 +43,10 @@ const customModules = [
     options: {},
   },
   {
+    resolve: './src/modules/social-gallery',
+    options: {},
+  },
+  {
     resolve: './src/modules/stripe-connect-account',
     options: {
       stripeApiKey: STRIPE_API_KEY,

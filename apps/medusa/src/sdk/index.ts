@@ -1,3 +1,4 @@
+import { AdminSocialGalleryImportsResource, AdminSocialGalleryPostsResource } from './admin/admin-social-gallery-posts';
 // apps/medusa/src/sdk/index.ts
 import { Client, Admin } from '@medusajs/js-sdk'
 import { AdminMenusResource } from './admin/admin-menus'
@@ -22,8 +23,13 @@ class ExtendedAdminSDK extends Admin {
   public googleCalendar: AdminGoogleCalendarResource
   public sushiDelivery: AdminSushiDeliveryResource
 
+  public socialGalleryPosts: AdminSocialGalleryPostsResource;
+  public socialGalleryImports: AdminSocialGalleryImportsResource;
+
   constructor(client: Client) {
-    super(client)
+    super(client);
+    this.socialGalleryPosts = new AdminSocialGalleryPostsResource(client);
+    this.socialGalleryImports = new AdminSocialGalleryImportsResource(client)
     this.menus = new AdminMenusResource(client)
     this.chefEvents = new AdminChefEventsResource(client)
     this.uploads = new AdminUploadsResource(client)
@@ -75,3 +81,5 @@ export type {
   GoogleCalendarStatus,
   GoogleCalendarStatusResponse,
 } from './admin/admin-google-calendar'
+
+export { AdminSocialGalleryImportsResource, AdminSocialGalleryPostsResource } from './admin/admin-social-gallery-posts';
