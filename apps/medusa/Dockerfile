@@ -33,7 +33,8 @@ COPY --chown=node:node --from=installer /app/.yarn .yarn
 COPY --chown=node:node --from=installer /app/apps/medusa/.medusa/server /app/server
 COPY --chown=node:node --from=installer /app/yarn.lock /app/server/yarn.lock
 
-RUN cd /app/server && yarn workspaces focus --production
+RUN cd /app/server && yarn workspaces focus --production && \
+    chown -R node:node /app/server
 
 USER 1000
 
